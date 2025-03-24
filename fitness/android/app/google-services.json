@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "831146661672",
+    "firebase_url": "https://fitness-46861-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "fitness-46861",
+    "storage_bucket": "fitness-46861.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831146661672:android:465ff54ceaa1070d0f621d",
+        "android_client_info": {
+          "package_name": "com.example.fitness"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0s82JlxlDveoFVPH4VRh95DN6LV4yFXU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
