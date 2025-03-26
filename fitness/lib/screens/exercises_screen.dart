@@ -63,7 +63,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
         final data = doc.data() as Map<dynamic, dynamic>;
         final Map<String, dynamic> exerciseData = {
           'id': doc.id,
-          'name': doc.id, // Using document ID as name as per your structure
+          'name': data['name'] ?? doc.id, // Using document ID as name as per your structure
           'equipment': data['equipment'] ?? '',
           'instructions': data['instructions'] ?? {},
           'images': data['images'] ?? '',
@@ -92,6 +92,8 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       
       setState(() {
         _exercises = loadedExercises;
+        _availableMuscleGroups = muscleGroups.toList()..sort();
+        _availableEquipment = equipment.toList()..sort();
         _isLoading = false;
       });
 
