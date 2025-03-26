@@ -10,8 +10,8 @@ class ExerciseDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the instructions map which contains steps, tips, etc.
-    final Map<dynamic, dynamic>? instructions = exercise['instructions'] as Map<dynamic, dynamic>?;
+    // Get the instructions
+    final instructions = exercise['instructions'];
     
     return Scaffold(
       appBar: AppBar(
@@ -23,27 +23,8 @@ class ExerciseDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Exercise image if available
-            if (exercise['images'] != '')
-              Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: Image.network(
-                    exercise['images'],
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 200,
-                        width: double.infinity,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.image_not_supported, size: 50),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              
+            _buildImageSection(exercise['images']),
+            
             const SizedBox(height: 24),
             
             // Equipment section
@@ -56,20 +37,56 @@ class ExerciseDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              exercise['equipment'] ?? 'No equipment needed',
+              exercise['equipment']?.toString() ?? 'No equipment needed',
               style: const TextStyle(fontSize: 16),
             ),
             
+            // Muscle Groups section
+            if (exercise['muscleGroups'] != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  _buildSectionHeader('Muscle Groups'),
+                  const SizedBox(height: 8),
+                  _buildMuscleGroups(exercise['muscleGroups']),
+                ],
+              ),
+              
+            // Tags section
+            if (exercise['tags'] != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  _buildSectionHeader('Tags'),
+                  const SizedBox(height: 8),
+                  _buildTags(exercise['tags']),
+                ],
+              ),
+              
+            // Video section (placeholder for future)
+            if (exercise['videos'] != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Videos'),
+                  const SizedBox(height: 8),
+                  _buildVideos(exercise['videos']),
+                ],
+              ),
+            
             const SizedBox(height: 24),
             
-            // Steps section 
+            // Steps section
             _buildSectionHeader('Steps'),
             const SizedBox(height: 8),
             _buildListSection(instructions != null ? instructions['steps'] : null),
             
             const SizedBox(height: 16),
             
-            // Tips section 
+            // Tips section
             _buildSectionHeader('Tips'),
             const SizedBox(height: 8),
             _buildListSection(instructions != null ? instructions['tips'] : null),
@@ -83,27 +100,257 @@ class ExerciseDetailScreen extends StatelessWidget {
             
             const SizedBox(height: 16),
             
-            // Precautions section 
+            // Precautions section
             _buildSectionHeader('Precautions'),
             const SizedBox(height: 8),
             _buildListSection(instructions != null ? instructions['precautions'] : null),
             
-            // Muscle Groups (if available)
-            if (exercise['muscleGroups'] != null)
+            // Photos gallery (placeholder for future)
+            if (exercise['photos'] != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 16),
-                  _buildSectionHeader('Muscle Groups'),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader('Photos'),
                   const SizedBox(height: 8),
-                  Text(
-                    exercise['muscleGroups']?.toString() ?? 'Not specified',
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  _buildPhotoGallery(exercise['photos']),
                 ],
               ),
               
             const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // Building main image section
+  Widget _buildImageSection(dynamic imageUrl) {
+    if (imageUrl != null && imageUrl != '') {
+      return Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: Image.network(
+            imageUrl,
+            height: 200,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildImagePlaceholder();
+            },
+          ),
+        ),
+      );
+    } else {
+      return _buildImagePlaceholder();
+    }
+  }
+  
+  // Building a placeholder for when no image is available
+  Widget _buildImagePlaceholder() {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.fitness_center, size: 50, color: Colors.grey),
+            SizedBox(height: 8),
+            Text(
+              'No image available',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // Building section for muscle groups
+  Widget _buildMuscleGroups(dynamic muscleGroups) {
+    if (muscleGroups == null) {
+      return const Text('No muscle groups specified');
+    }
+    
+    if (muscleGroups is String) {
+      return Text(
+        muscleGroups,
+        style: const TextStyle(fontSize: 16),
+      );
+    } else if (muscleGroups is List) {
+      return Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children: List.generate(
+          muscleGroups.length,
+          (index) => Chip(
+            label: Text(muscleGroups[index].toString()),
+            backgroundColor: Colors.blue.shade100,
+          ),
+        ),
+      );
+    } else if (muscleGroups is Map) {
+      return Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children: muscleGroups.entries.map((e) {
+          return Chip(
+            label: Text(e.value.toString()),
+            backgroundColor: Colors.blue.shade100,
+          );
+        }).toList(),
+      );
+    } else {
+      return Text(
+        muscleGroups.toString(),
+        style: const TextStyle(fontSize: 16),
+      );
+    }
+  }
+  
+  // Building section for tags
+  Widget _buildTags(dynamic tags) {
+    if (tags == null) {
+      return const Text('No tags specified');
+    }
+    
+    if (tags is String) {
+      return Text(
+        tags,
+        style: const TextStyle(fontSize: 16),
+      );
+    } else if (tags is List) {
+      return Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children: List.generate(
+          tags.length,
+          (index) => Chip(
+            label: Text(tags[index].toString()),
+            backgroundColor: Colors.green.shade100,
+          ),
+        ),
+      );
+    } else if (tags is Map) {
+      return Wrap(
+        spacing: 8.0,
+        runSpacing: 8.0,
+        children: tags.entries.map((e) {
+          return Chip(
+            label: Text(e.value.toString()),
+            backgroundColor: Colors.green.shade100,
+          );
+        }).toList(),
+      );
+    } else {
+      return Text(
+        tags.toString(),
+        style: const TextStyle(fontSize: 16),
+      );
+    }
+  }
+  
+  // Build videos section (placeholder for future videos)
+  Widget _buildVideos(dynamic videos) {
+    if (videos == null || (videos is List && videos.isEmpty) || (videos is String && videos.isEmpty)) {
+      return Container(
+        height: 150,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.video_library, size: 40, color: Colors.grey),
+              SizedBox(height: 8),
+              Text(
+                'Videos will be available soon',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    // Here you would loop through your videos and build video players
+    // For now, just a placeholder
+    return Container(
+      height: 150,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.video_library, size: 40, color: Colors.grey),
+            SizedBox(height: 8),
+            Text(
+              'Videos will be available soon',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // Build photo gallery (placeholder for future)
+  Widget _buildPhotoGallery(dynamic photos) {
+    if (photos == null || (photos is List && photos.isEmpty) || (photos is String && photos.isEmpty)) {
+      return Container(
+        height: 120,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(8.0),
+        ),
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.photo_library, size: 40, color: Colors.grey),
+              SizedBox(height: 8),
+              Text(
+                'Photo gallery will be available soon',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    // Here you would loop through your photos and build a gallery
+    // For now, just a placeholder
+    return Container(
+      height: 120,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.photo_library, size: 40, color: Colors.grey),
+            SizedBox(height: 8),
+            Text(
+              'Photo gallery will be available soon',
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       ),
@@ -175,11 +422,11 @@ class ExerciseDetailScreen extends StatelessWidget {
       children: listItems,
     );
   }
-
+  
   // Helper method to build a single list item
   Widget _buildListItem(int index, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
