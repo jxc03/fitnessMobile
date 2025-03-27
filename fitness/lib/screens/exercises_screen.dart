@@ -52,8 +52,8 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     
     try {
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('Exercises')
-          .get();
+        .collection('Exercises')
+        .get();
       
       final List<Map<String, dynamic>> loadedExercises = [];
       final Set<String> muscleGroups = {};
