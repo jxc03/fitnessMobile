@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateWorkoutPlanScreen extends StatefulWidget {
-  final String? planId; // If provided, we're editing an existing plan
+  final String? planId; // If provided, to edit an existing plan
 
   const CreateWorkoutPlanScreen({super.key, this.planId});
 
@@ -41,10 +42,31 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
 
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
+        
+        // Check if the current user is the owner of this plan
+        final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+        if (data['userId'] != currentUserId) {
+          // Not the owner, show error and go back
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('You do not have permission to edit this workout plan')),
+            );
+            Navigator.pop(context);
+          }
+          return;
+        }
+
         setState(() {
           _nameController.text = data['name'] ?? '';
           _descriptionController.text = data['description'] ?? '';
         });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Workout plan not found')),
+          );
+          Navigator.pop(context);
+        }
       }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,6 +162,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
           'name': _nameController.text,
           'description': _descriptionController.text,
           'updatedAt': FieldValue.serverTimestamp(),
+          'userId': FirebaseAuth.instance.currentUser!.uid,
         });
 
         if (mounted) {
@@ -158,7 +181,7 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
           'exercises': [],
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
-          // Add user ID here later when you implement authentication
+          'userId': FirebaseAuth.instance.currentUser!.uid,
         });
 
         if (mounted) {

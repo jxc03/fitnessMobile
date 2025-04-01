@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'workout_plan_details_screen.dart';
 import 'create_workout_plan_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WorkoutPlansScreen extends StatefulWidget {
   const WorkoutPlansScreen({super.key});
@@ -28,8 +29,12 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     });
 
     try {
+      // Get the current user ID
+      final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('WorkoutPlans')
+          .where('userId', isEqualTo: userId)
           .orderBy('createdAt', descending: true)
           .get();
 
@@ -44,6 +49,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
           'exerciseCount': (data['exercises'] as List?)?.length ?? 0,
           'createdAt': data['createdAt'],
           'updatedAt': data['updatedAt'],
+          'userId': data['userId'],
         });
       }
 
