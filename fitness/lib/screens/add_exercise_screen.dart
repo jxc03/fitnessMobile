@@ -31,15 +31,21 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     'Biceps',
     'Triceps',
     'Legs',
-    'Abs',
+    'Core',
     'Glutes',
+    'Hamstrings',
+    'Quads',
+    'Upper Body',
+    'Lower Body',
   ];
   String _selectedMuscleGroup = 'All';
+
+  Set<String> _alreadyAddedExercises = {}; // To track already added exercises
 
   @override
   void initState() {
     super.initState();
-    _fetchExercises();
+    _fetchExistingExercises().then((_) => _fetchExercises());
   }
 
   @override
@@ -63,11 +69,19 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
 
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
+        final String exerciseId = doc.id;
+        
+        // Check if the exercise is already added to the workout plan
+        if (_alreadyAddedExercises.contains(exerciseId)) {
+          continue;
+        }
+
         loadedExercises.add({
           'id': doc.id,
           'name': data['name'] ?? doc.id,
           'equipment': data['equipment'] ?? '',
           'muscleGroups': data['muscleGroups'] ?? [],
+          'tags': data['tags'] ?? [],
         });
       }
 
@@ -85,6 +99,34 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     }
   }
 
+  // Fetch existing exercises from the workout plan
+  Future<void> _fetchExistingExercises() async { 
+    try {
+      // Get the 
+      final docSnapshot = await FirebaseFirestore.instance
+      .collection('WorkoutPlans')
+      .doc(widget.workoutPlanId)
+      .get();
+      
+      // Check if the document exists
+      if (!docSnapshot.exists) {
+        return;
+      }
+      
+      // Get the data from the document
+      final data = docSnapshot.data() as Map<String, dynamic>;
+      // Get the current exercises from the document
+      final currentExercises = List.from(data['exercises'] ?? []);
+      
+      // Extract exercise IDs from current exercises
+      _alreadyAddedExercises = currentExercises
+      .map<String>((exercise) => exercise['exerciseId'] as String)
+      .toSet();
+    } catch (error) {
+      print('Error fetching existing exercises: $error');
+    }
+  }
+
   void _applyFilters() {
     final query = _searchController.text.toLowerCase();
     List<Map<String, dynamic>> result = [];
@@ -98,12 +140,25 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
       bool muscleGroupMatch = true;
       if (_selectedMuscleGroup != 'All') {
         final muscleGroups = exercise['muscleGroups'];
+        bool inMuscleGroups = false;
         if (muscleGroups is List) {
-          muscleGroupMatch = muscleGroups.any((group) =>
-              group.toString().toLowerCase() == _selectedMuscleGroup.toLowerCase());
-        } else {
-          muscleGroupMatch = false;
+          inMuscleGroups = muscleGroups.any((group) => 
+          group.toString().toLowerCase() == _selectedMuscleGroup.toLowerCase());
         }
+
+        // Filter Upper Body and Lower Body, also check the tags array
+        bool inTags = false;
+        if (_selectedMuscleGroup == 'Upper Body' || _selectedMuscleGroup == 'Lower Body') {
+          final tags = exercise['tags'];
+          if (tags is List) {
+            inTags = tags.any((tag) => 
+            tag.toString().toLowerCase() == _selectedMuscleGroup.toLowerCase());
+          }
+        }
+        
+        // Match if found in either muscle groups or tags (for Upper/Lower Body)
+        muscleGroupMatch = inMuscleGroups || 
+        ((_selectedMuscleGroup == 'Upper Body' || _selectedMuscleGroup == 'Lower Body') && inTags);
       }
 
       return (nameMatch || equipmentMatch) && muscleGroupMatch;
@@ -291,6 +346,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 Text('Equipment: ${exercise['equipment']}'),
                 if (exercise['muscleGroups'] is List && exercise['muscleGroups'].isNotEmpty)
                   Text('Muscle Groups: ${(exercise['muscleGroups'] as List).join(', ')}'),
+                if (exercise['tags'] is List && exercise['tags'].isNotEmpty)
+                  Text('Tags: ${(exercise['tags'] as List).join(', ')}'),
               ],
             ),
             value: isSelected,
