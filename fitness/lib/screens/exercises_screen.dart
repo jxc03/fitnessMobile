@@ -328,13 +328,6 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           ),
         ),
       ),
-      // Add FloatingActionButton for adding new exercises if needed
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to add exercise screen or show dialog
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
@@ -499,7 +492,18 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                     padding: const EdgeInsets.only(top: 4),
                     child: _buildMuscleGroupsPreview(exercise['muscleGroups']),
                   ),
-              ],
+                // Display tags if available
+                if  (exercise['tags'] != null && exercise['tags'] is List && 
+                    (exercise['tags'] as List).isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Tags: ${(exercise['tags'] as List).join(', ')}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
             ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
