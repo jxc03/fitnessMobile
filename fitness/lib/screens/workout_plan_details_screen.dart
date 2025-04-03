@@ -264,13 +264,20 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
                     children: [
                       _buildExerciseDetail('Sets', '${exercise['sets'] ?? 3}'),
-                      const SizedBox(width: 24),
                       _buildExerciseDetail('Reps', exercise['reps'] ?? '10-12'),
-                      const SizedBox(width: 24),
                       _buildExerciseDetail('Rest', '${exercise['rest'] ?? 60}s'),
+                    
+                      // Show weight if it's greater than 0
+                      if ((exercise['weight'] ?? 0) > 0)
+                        _buildExerciseDetail(
+                          'Weight', 
+                          '${exercise['weight']}${exercise['weightUnit'] ?? 'kg'}'
+                        ),
                     ],
                   ),
                   if (exercise['notes'] != null && exercise['notes'].isNotEmpty)
@@ -399,6 +406,8 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     int sets = exercise['sets'] ?? 3;
     String reps = exercise['reps'] ?? '10-12';
     int rest = exercise['rest'] ?? 60;
+    double weight = exercise['weight'] ?? 0.0;
+    String weightUnit = exercise['weightUnit'] ?? 'kg';
     String notes = exercise['notes'] ?? '';
 
     return AlertDialog(
@@ -409,7 +418,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Exercise name display (not editable)
+              // Exercise name display
               Text(
                 exercise['exerciseName'] ?? 'Unknown Exercise',
                 style: const TextStyle(
@@ -484,6 +493,63 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
               const SizedBox(height: 16),
               
+              // Weight and unit
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Weight input field
+                  Expanded(
+                    flex: 2,
+                    child: TextFormField(
+                      initialValue: weight.toString(),
+                      decoration: const InputDecoration(
+                        labelText: 'Weight',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return null; // Weight can be empty
+                        }
+                        if (double.tryParse(value) == null || double.parse(value) < 0) {
+                          return 'Enter a valid weight';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        weight = value != null && value.isNotEmpty ? double.parse(value) : 0.0;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Weight unit selector
+                  Expanded(
+                    flex: 1,
+                    child: DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: 'Unit',
+                        border: OutlineInputBorder(),
+                      ),
+                      value: weightUnit,
+                      items: const [
+                        DropdownMenuItem(value: 'kg', child: Text('kg')),
+                        DropdownMenuItem(value: 'lb', child: Text('lb')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          weightUnit = value;
+                        }
+                      },
+                      onSaved: (value) {
+                        weightUnit = value ?? 'kg';
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
               // Notes
               TextFormField(
                 initialValue: notes,
@@ -516,6 +582,8 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               updatedExercise['sets'] = sets;
               updatedExercise['reps'] = reps;
               updatedExercise['rest'] = rest;
+              updatedExercise['weight'] = weight;
+              updatedExercise['weightUnit'] = weightUnit;
               updatedExercise['notes'] = notes;
               
               _updateExercise(updatedExercise, index);

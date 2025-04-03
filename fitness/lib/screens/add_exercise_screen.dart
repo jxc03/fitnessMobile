@@ -361,6 +361,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     'sets': 3,
                     'reps': '10-12',
                     'rest': 60,
+                    'weight': 0.0,
+                    'weightUnit': 'kg',
                     'notes': '',
                     'order': _selectedExercises.length,
                   };
@@ -391,6 +393,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     int sets = exercise['sets'] ?? 3;
     String reps = exercise['reps'] ?? '10-12';
     int rest = exercise['rest'] ?? 60;
+    double weight = exercise['weight'] ?? 0.0;
+    String weightUnit = exercise['weightUnit'] ?? 'kg';
     String notes = exercise['notes'] ?? '';
 
     showDialog(
@@ -461,6 +465,61 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     rest = int.parse(value!);
                   },
                 ),
+                // Weight input
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        initialValue: weight.toString(),
+                        decoration: const InputDecoration(
+                          labelText: 'Weight',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return null; // Weight can be empty
+                          }
+                          if (double.tryParse(value) == null || double.parse(value) < 0) {
+                            return 'Enter a valid weight';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          weight = value != null && value.isNotEmpty ? double.parse(value) : 0.0;
+                        },
+                      ),
+                    ),
+                    // Weight unit selector
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 1,
+                      child: DropdownButtonFormField<String>(
+                        decoration: const InputDecoration(
+                          labelText: 'Unit',
+                          border: OutlineInputBorder(),
+                        ),
+                        value: weightUnit,
+                        items: const [
+                          DropdownMenuItem(value: 'kg', child: Text('kg')),
+                          DropdownMenuItem(value: 'lb', child: Text('lb')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            weightUnit = value;
+                          }
+                        },
+                        onSaved: (value) {
+                          weightUnit = value ?? 'kg';
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                // Notes input
                 const SizedBox(height: 16),
                 TextFormField(
                   initialValue: notes,
@@ -494,6 +553,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     'sets': sets,
                     'reps': reps,
                     'rest': rest,
+                    'weight': weight,
+                    'weightUnit': weightUnit,
                     'notes': notes,
                     'order': exercise['order'],
                   };
