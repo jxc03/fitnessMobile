@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'exercise_details_screen.dart';
 import 'add_exercise_screen.dart';
+import 'workout_tracking_screen.dart';
+import 'workout_history_screen.dart';
+import 'workout_progress_screen.dart';
 
 class WorkoutPlanDetailScreen extends StatefulWidget {
   final String planId;
@@ -73,18 +76,66 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       appBar: AppBar(
         title: Text(_isLoading ? 'Workout Plan' : _workoutPlan?['name'] ?? 'Workout Plan'),
         actions: [
-          if (!_isLoading && _workoutPlan != null)
+          if (!_isLoading && _workoutPlan != null) ... [
+            // Analytics button
             IconButton(
-              icon: const Icon(Icons.play_arrow),
+              icon: const Icon(Icons.insights),
+              tooltip: 'View Analytics',
               onPressed: () {
-                // Navigate to start workout screen
-                // This will be implemented later when you add workout tracking
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Starting workout... (to be implemented)')),
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  builder: (BuildContext context) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.history),
+                            title: const Text('Workout History'),
+                            subtitle: const Text('View your past workouts'),
+                            onTap: () {
+                              Navigator.pop(context); // Close the bottom sheet
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const WorkoutHistoryScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(),
+                          ListTile(
+                            leading: const Icon(Icons.show_chart),
+                            title: const Text('Progress Analytics'),
+                            subtitle: const Text('Track your exercise improvements'),
+                            onTap: () {
+                              Navigator.pop(context); // Close the bottom sheet
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const WorkoutProgressScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 );
               },
-              tooltip: 'Start Workout',
             ),
+            // Start workout button
+            IconButton(
+              icon: const Icon(Icons.play_arrow),
+              tooltip: 'Start Workout',
+              onPressed: () => _startWorkout(),
+            ),
+          ]
         ],
       ),
       body: _buildBody(),
@@ -711,6 +762,34 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           SnackBar(content: Text('Error removing exercise: $error')),
         );
       }
+    }
+  }
+
+  void _startWorkout() async {
+    if (_workoutPlan == null) return;
+    final exercises = _workoutPlan!['exercises'] as List;
+    
+    if (exercises.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Add exercises to your workout plan before starting'),
+        ),
+      );
+      return;
+    }
+    
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WorkoutTrackingScreen(
+          workoutPlanId: widget.planId,
+          workoutPlan: _workoutPlan!,
+        ),
+      ),
+    );
+  
+    if (result == true) {
+      _fetchWorkoutPlanDetails(); // Refresh workout plan details after workout completion
     }
   }
 }

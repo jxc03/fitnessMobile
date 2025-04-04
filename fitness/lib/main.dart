@@ -21,6 +21,10 @@ import 'screens/authentication/signup_screen.dart';
 import 'screens/authentication/forgot_password_screen.dart';
 import 'screens/authentication/auth_wrapper.dart';
 
+// Import workout tracking screens
+import 'screens/workout_history_screen.dart';
+import 'screens/workout_progress_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -52,6 +56,8 @@ class MainApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/exercises': (context) => const ExercisesScreen(),
         '/workout-plans': (context) => const WorkoutPlansScreen(),
+        '/workout-history': (context) => const WorkoutHistoryScreen(),
+        '/workout-progress': (context) => const WorkoutProgressScreen(),
       },
       // Use onGenerateRoute for routes with parameters
       onGenerateRoute: (settings) {
@@ -155,82 +161,195 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Fitness App'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Welcome to your Fitness Journey!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            
-            // Display user name if available
-            if (user != null && user.displayName != null)
-              Text(
-                'Hello, ${user.displayName}!',
-                style: const TextStyle(fontSize: 18),
-                textAlign: TextAlign.center,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome section
+              Center(
+                child: Column(
+                  children: [
+                    const Text(
+                      'Welcome to your Fitness Journey!',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Display user name if available
+                    if (user != null && user.displayName != null)
+                      Text(
+                        'Hello, ${user.displayName}!',
+                        style: const TextStyle(fontSize: 18),
+                        textAlign: TextAlign.center,
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Quick access section
+              const Text(
+                'Quick Access',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              // Quick access cards for primary features
+              Row(
+                children: [
+                  // Exercises card
+                  Expanded(
+                    child: _buildFeatureCard(
+                      context,
+                      icon: Icons.fitness_center,
+                      title: 'Exercises',
+                      color: Colors.blue.shade100,
+                      onTap: () {
+                        (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                            ?.setState(() {
+                          (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                              ?._currentIndex = 1;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Workout Plans card
+                  Expanded(
+                    child: _buildFeatureCard(
+                      context,
+                      icon: Icons.format_list_bulleted,
+                      title: 'Workout Plans',
+                      color: Colors.green.shade100,
+                      onTap: () {
+                        (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                            ?.setState(() {
+                          (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                              ?._currentIndex = 2;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
               
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Switch to Exercises tab
-                    (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                        ?.setState(() {
-                      (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                          ?._currentIndex = 1;
-                    });
-                  },
-                  icon: const Icon(Icons.fitness_center),
-                  label: const Text('Exercises'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Switch to Workouts tab
-                    (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                        ?.setState(() {
-                      (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                          ?._currentIndex = 2;
-                    });
-                  },
-                  icon: const Icon(Icons.format_list_bulleted),
-                  label: const Text('Workout Plans'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            // Profile button
-            ElevatedButton.icon(
-              onPressed: () {
-                // Switch to Profile tab
-                (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                    ?.setState(() {
-                  (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                      ?._currentIndex = 3;
-                });
-              },
-              icon: const Icon(Icons.person),
-              label: const Text('View Profile'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              const SizedBox(height: 32),
+              
+              // Workout Tracking section
+              const Text(
+                'Workout Tracking',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              
+              // Workout history and progress cards
+              Row(
+                children: [
+                  // Workout History card
+                  Expanded(
+                    child: _buildFeatureCard(
+                      context,
+                      icon: Icons.history,
+                      title: 'Workout History',
+                      color: Colors.orange.shade100,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WorkoutHistoryScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Progress Analytics card
+                  Expanded(
+                    child: _buildFeatureCard(
+                      context,
+                      icon: Icons.show_chart,
+                      title: 'Progress Analytics',
+                      color: Colors.purple.shade100,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WorkoutProgressScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              
+              // Profile section
+              _buildFeatureCard(
+                context,
+                icon: Icons.person,
+                title: 'My Profile',
+                color: Colors.grey.shade100,
+                isFullWidth: true,
+                onTap: () {
+                  (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                      ?.setState(() {
+                    (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                        ?._currentIndex = 3;
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+  
+  Widget _buildFeatureCard(BuildContext context, {
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+    bool isFullWidth = false,
+    }
+  )
+  {
+  return Card(
+    elevation: 2,
+    color: color,
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: isFullWidth 
+            ? MainAxisAlignment.start 
+            : MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 28),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (isFullWidth) ...[
+              const Spacer(),
+              const Icon(Icons.arrow_forward_ios, size: 16),
+            ],
+          ],
+        ),
+      ),
+    ),
+  );
   }
 }
