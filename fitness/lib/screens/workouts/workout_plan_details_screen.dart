@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../exercises/exercise_details_screen.dart';
 import 'add_exercise_screen.dart';
-import '../workout_tracking_screen.dart';
-import '../workout_history_screen.dart';
-import '../workout_progress_screen.dart';
+import '../tracking/workout_tracking_screen.dart';
+import '../tracking/workout_history_screen.dart';
+import '../tracking/workout_progress_screen.dart';
 
 class WorkoutPlanDetailScreen extends StatefulWidget {
   final String planId;

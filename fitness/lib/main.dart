@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
-
 // Imports for firebase 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 // Import screens
 import 'screens/exercises/exercises_screen.dart';
 import 'screens/exercises/exercise_details_screen.dart';
 import 'screens/workouts/workout_plans_screen.dart';
 import 'screens/profile/profile_screen.dart';
-
 // Import authenitcation service
 import 'services/authentication_service.dart';
-
 // Import authentication screens
 import 'screens/authentication/welcome_screen.dart';
 import 'screens/authentication/signin_screen.dart';
 import 'screens/authentication/signup_screen.dart';
 import 'screens/authentication/forgot_password_screen.dart';
 import 'screens/authentication/auth_wrapper.dart';
-
 // Import workout tracking screens
-import 'screens/workout_history_screen.dart';
-import 'screens/workout_progress_screen.dart';
+import 'screens/tracking/workout_history_screen.dart';
+import 'screens/tracking/workout_progress_screen.dart';
+import 'screens/tracking/tracking_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +54,7 @@ class MainApp extends StatelessWidget {
         '/workout-plans': (context) => const WorkoutPlansScreen(),
         '/workout-history': (context) => const WorkoutHistoryScreen(),
         '/workout-progress': (context) => const WorkoutProgressScreen(),
+        '/tracking': (context) => const TrackingScreen(),
       },
       // Use onGenerateRoute for routes with parameters
       onGenerateRoute: (settings) {
@@ -111,6 +108,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const HomeScreen(),
     const ExercisesScreen(),
     const WorkoutPlansScreen(),
+    const TrackingScreen(),
     const ProfileScreen(),
   ];
   
@@ -138,6 +136,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.format_list_bulleted),
             label: 'Workouts',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.show_chart),
+            label: 'Tracking',
           ),
           BottomNavigationBarItem(
           icon: Icon(Icons.person),
@@ -246,46 +248,20 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               
-              // Workout history and progress cards
-              Row(
-                children: [
-                  // Workout History card
-                  Expanded(
-                    child: _buildFeatureCard(
-                      context,
-                      icon: Icons.history,
-                      title: 'Workout History',
-                      color: Colors.orange.shade100,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const WorkoutHistoryScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Progress Analytics card
-                  Expanded(
-                    child: _buildFeatureCard(
-                      context,
-                      icon: Icons.show_chart,
-                      title: 'Progress Analytics',
-                      color: Colors.purple.shade100,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const WorkoutProgressScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+              // Tracking Card
+              _buildFeatureCard(
+                context,
+                icon: Icons.show_chart,
+                title: 'Track Your Progress',
+                color: Colors.purple.shade100,
+                isFullWidth: true,
+                onTap: () {
+                  (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                      ?.setState(() {
+                    (context.findAncestorStateOfType<_MainNavigationScreenState>())
+                        ?._currentIndex = 3; // Index for Tracking tab
+                  });
+                },
               ),
               const SizedBox(height: 32),
               
@@ -300,7 +276,7 @@ class HomeScreen extends StatelessWidget {
                   (context.findAncestorStateOfType<_MainNavigationScreenState>())
                       ?.setState(() {
                     (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                        ?._currentIndex = 3;
+                        ?._currentIndex = 4;
                   });
                 },
               ),
