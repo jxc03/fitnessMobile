@@ -6,10 +6,10 @@ import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // Import screens
-import 'screens/exercises_screen.dart';
-import 'screens/exercise_details_screen.dart';
-import 'screens/workout_plans_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/exercises/exercises_screen.dart';
+import 'screens/exercises/exercise_details_screen.dart';
+import 'screens/workouts/workout_plans_screen.dart';
+import 'screens/profile/profile_screen.dart';
 
 // Import authenitcation service
 import 'services/authentication_service.dart';

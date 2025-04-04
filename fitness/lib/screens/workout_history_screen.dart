@@ -20,7 +20,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
     super.initState();
     _fetchWorkoutHistory();
   }
-
+  
   Future<void> _fetchWorkoutHistory() async {
     setState(() {
       _isLoading = true;

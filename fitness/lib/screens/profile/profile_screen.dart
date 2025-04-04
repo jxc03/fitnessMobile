@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fitness/services/authentication_service.dart';
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
-import '../screens/authentication/welcome_screen.dart';
+import '../authentication/welcome_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
