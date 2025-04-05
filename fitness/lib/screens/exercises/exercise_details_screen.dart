@@ -1,4 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
+
+/// This screen displays the details of a specific exercise.
+/// It presents information such as the exercise name, equipment needed, images,
+/// muscle groups, instructions, tips, and more in a scrollable format.
 
 class ExerciseDetailScreen extends StatelessWidget {
   final Map<dynamic, dynamic> exercise;
@@ -8,9 +12,12 @@ class ExerciseDetailScreen extends StatelessWidget {
     required this.exercise,
   });
 
+  /// Build the main widget for the exercise detail screen
+  /// Responsible for displaying the exercise details
   @override
   Widget build(BuildContext context) {
-    // Get the instructions
+    // Get the instructions from the exercise data
+    // Its a nested map that contains the steps, tips, common mistakes, and precautions
     final instructions = exercise['instructions'];
     
     return Scaffold(
@@ -124,7 +131,8 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  // Building main image section
+  /// Build an image section to display the exercise image
+  /// If no image is available, a placeholder is shown
   Widget _buildImageSection(dynamic imageUrl) {
     if (imageUrl != null && imageUrl != '') {
       return Center(
@@ -135,6 +143,7 @@ class ExerciseDetailScreen extends StatelessWidget {
             height: 200,
             width: double.infinity,
             fit: BoxFit.cover,
+            // If theres no image or fails to load, show a placeholder
             errorBuilder: (context, error, stackTrace) {
               return _buildImagePlaceholder();
             },
@@ -146,7 +155,8 @@ class ExerciseDetailScreen extends StatelessWidget {
     }
   }
   
-  // Building a placeholder for when no image is available
+  /// Build a placeholder for when no image is available or fails to load
+  /// This widget displays a grey box with an icon and text indicating no image is available
   Widget _buildImagePlaceholder() {
     return Container(
       height: 200,
@@ -171,12 +181,19 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  // Building section for muscle groups
+  /// Build the muscle groups section
+  /// This widget handles the display of muscleGroups information
   Widget _buildMuscleGroups(dynamic muscleGroups) {
+    // Check if muscleGroups is empty
+    // If so, return a message
     if (muscleGroups == null) {
       return const Text('No muscle groups specified');
     }
     
+    // If muscleGroups is a string, display it directly
+    // If muscleGroups is a list, display each item as a chip
+    // If muscleGroups is a map, display each entry as a chip
+    // If muscleGroups is of an unexpected type, display its string representation
     if (muscleGroups is String) {
       return Text(
         muscleGroups,
@@ -213,8 +230,11 @@ class ExerciseDetailScreen extends StatelessWidget {
     }
   }
   
-  // Building section for tags
+  /// Build section for tags
+  /// This widget handles the display of tags information
   Widget _buildTags(dynamic tags) {
+    // Check if tags is empty
+    // If so, return a message
     if (tags == null) {
       return const Text('No tags specified');
     }
@@ -255,7 +275,7 @@ class ExerciseDetailScreen extends StatelessWidget {
     }
   }
   
-  // Build videos section (placeholder for future videos)
+  /// Build videos section (placeholder for future videos)
   Widget _buildVideos(dynamic videos) {
     if (videos == null || (videos is List && videos.isEmpty) || (videos is String && videos.isEmpty)) {
       return Container(
@@ -281,8 +301,8 @@ class ExerciseDetailScreen extends StatelessWidget {
       );
     }
     
-    // Here you would loop through your videos and build video players
-    // For now, just a placeholder
+    // TODO: Implement video functionality 
+    // Currently, it just shows a placeholder
     return Container(
       height: 150,
       width: double.infinity,
@@ -306,7 +326,7 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  // Build photo gallery (placeholder for future)
+  /// Build photo gallery (placeholder for future)
   Widget _buildPhotoGallery(dynamic photos) {
     if (photos == null || (photos is List && photos.isEmpty) || (photos is String && photos.isEmpty)) {
       return Container(
@@ -331,9 +351,9 @@ class ExerciseDetailScreen extends StatelessWidget {
         ),
       );
     }
-    
-    // Here you would loop through your photos and build a gallery
-    // For now, just a placeholder
+
+    // TODO: Implement photo gallery functionality
+    // Currently, it just shows a placeholder
     return Container(
       height: 120,
       width: double.infinity,
@@ -357,6 +377,8 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
+  /// Build section header with a title
+  /// This widget is used to display the title of each section in the exercise detail screen
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
@@ -367,56 +389,70 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  // Build a section with either map or list data
+  /// Build section for displaying the list of instructions
+  /// This widget handles the display of steps, tips, common mistakes, and precautions
   Widget _buildListSection(dynamic items) {
+    // Check if items is empty, if so then return a message
     if (items == null) {
       return const Text('No information available');
     }
-    
+
+    // Initialise an empty list to hold the list items
     List<Widget> listItems = [];
-    
-    // Handle items as Map
+
+    // Check if items is a Map 
+    // If its empty, return a message
     if (items is Map) {
       if (items.isEmpty) {
         return const Text('No information available');
       }
-      
-      // Sort the keys numerically (0, 1, 2, etc.)
-      final sortedKeys = items.keys.toList()
-        ..sort((a, b) {
-          // Handle both string and int keys
-          final aInt = a is String ? int.tryParse(a) ?? 0 : a;
-          final bInt = b is String ? int.tryParse(b) ?? 0 : b;
-          return aInt.compareTo(bInt);
-        });
-        
+
+      // If not empty, sort the keys numerically (0, 1, 2 etc)
+      final sortedKeys = items.keys.toList()..sort((a, b) {
+        // Handle both string and int keys
+        // Convert string keys to int if possible, if it fails then use 0
+        final aInt = a is String ? int.tryParse(a) ?? 0 : a;
+        final bInt = b is String ? int.tryParse(b) ?? 0 : b;
+        return aInt.compareTo(bInt);
+      });
+
+      // Loop through each key in sortedKeys
       for (var key in sortedKeys) {
+        // Store the key
+        // Convert the key to int index if its a string
         final value = items[key];
         final index = key is String ? int.tryParse(key) ?? 0 : key;
         
+        // Build the list widgit then add it to the list
         listItems.add(
           _buildListItem(index, value.toString()),
         );
       }
     }
-    // Handle items as List
+
+    // Handle List data structure
+    // If the items is a List
     else if (items is List) {
+      // Check if its empty, if so return message
       if (items.isEmpty) {
         return const Text('No information available');
       }
       
+      // Loop through each item in the list
       for (int i = 0; i < items.length; i++) {
+        // Get the item at the current index
+        // Then add the index and string representation of the value
         final value = items[i];
         listItems.add(
           _buildListItem(i, value.toString()),
         );
       }
     }
-    // Not a recognized collection type
+
+    // Handle unexpected data types
     else {
       return Text('Unexpected data format: ${items.runtimeType}');
     }
-    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: listItems,
@@ -424,6 +460,7 @@ class ExerciseDetailScreen extends StatelessWidget {
   }
   
   // Helper method to build a single list item
+  // This widget is used to display each step, tip, common mistake, or precaution
   Widget _buildListItem(int index, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
