@@ -305,8 +305,6 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
               
               const SizedBox(height: 16),
               
-              // Category filter tabs
-              _buildCategoryTabs(),
               
               const SizedBox(height: 16),
                // Active filters display
@@ -376,46 +374,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     );
   }
 
-  // Category filter tabs (All Exercise, Muscle, Equipment)
-  Widget _buildCategoryTabs() {
-    return Row(
-      children: [
-        _buildCategoryTab('All Exercise'),
-        const SizedBox(width: 8),
-        _buildCategoryTab('Muscle'),
-        const SizedBox(width: 8),
-        _buildCategoryTab('Equipment'),
-      ],
-    );
-  }
 
-  // Individual category tab
-  Widget _buildCategoryTab(String category) {
-    final isSelected = _selectedCategory == category;
-    
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedCategory = category;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(4),
-          border: isSelected ? Border.all(color: Colors.blue, width: 2) : null,
-        ),
-        child: Text(
-          category,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.blue : Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
 
   // Empty state for exercise list
   Widget _buildEmptyExerciseList() {
