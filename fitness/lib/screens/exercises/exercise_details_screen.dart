@@ -134,22 +134,38 @@ class ExerciseDetailScreen extends StatelessWidget {
   /// Build an image section to display the exercise image
   /// If no image is available, a placeholder is shown
   Widget _buildImageSection(dynamic imageUrl) {
-    if (imageUrl != null && imageUrl != '') {
+    // Check if imageUrl is not null and is a string 
+    if (imageUrl != null && imageUrl.toString().isNotEmpty) {
+      // Check if the image is a local asset or a network image
+      final bool isLocalAsset = !imageUrl.toString().startsWith('http') &&
+                                !imageUrl.toString().startsWith('https'); 
       return Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8.0),
-          child: Image.network(
-            imageUrl,
-            height: 200,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            // If theres no image or fails to load, show a placeholder
-            errorBuilder: (context, error, stackTrace) {
-              return _buildImagePlaceholder();
-            },
+          child: isLocalAsset
+            ? Image.asset(
+                imageUrl,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                // If the asset fails to load, show a placeholder
+                errorBuilder: (context, error, stackTrace) {
+                  print('Error loading image: $error');
+                  return _buildImagePlaceholder();
+                },
+              )
+            : Image.network(
+                imageUrl,
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                // If the network image fails to load, show a placeholder
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildImagePlaceholder();
+                },
+              ),
           ),
-        ),
-      );
+        );
     } else {
       return _buildImagePlaceholder();
     }
@@ -354,24 +370,117 @@ class ExerciseDetailScreen extends StatelessWidget {
 
     // TODO: Implement photo gallery functionality
     // Currently, it just shows a placeholder
-    return Container(
+
+    // Convert to a list if it's a single string
+    List<String> photoList = [];
+    if (photos is String) {
+      photoList = [photos];
+    } else if (photos is List) {
+      photoList = List<String>.from(photos);
+    }
+
+    return SizedBox(
       height: 120,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.photo_library, size: 40, color: Colors.grey),
-            SizedBox(height: 8),
-            Text(
-              'Photo gallery will be available soon',
-              style: TextStyle(color: Colors.grey),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: photoList.length,
+        itemBuilder: (context, index) {
+          final photo = photoList[index];
+          final bool isLocalAsset = !photo.startsWith('http') && !photo.startsWith('https');
+          
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: GestureDetector(
+              onTap: () {
+                // Open full screen image view
+                _showFullScreenImage(context, photo, index, photoList);
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8.0),
+                child: isLocalAsset
+                ? Image.asset(
+                  photo,
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    print('Error loading image: $error');
+                    return _buildImagePlaceholder();
+                  },
+                )
+                : Image.network(
+                  photo,
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildImagePlaceholder();
+                  },
+                ),
+              ),
             ),
-          ],
+          );
+        },
+      ),
+    );
+  }
+
+  // Method to show full screen image
+  void _showFullScreenImage(BuildContext context, String imageUrl, int initialIndex, List<String> allImages) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: PageView.builder(
+            controller: PageController(initialPage: initialIndex),
+            itemCount: allImages.length,
+            itemBuilder: (context, index) {
+              final String currentImage = allImages[index];
+              final bool isLocalAsset = !currentImage.startsWith('http') && !currentImage.startsWith('https');
+            
+              return Center(
+                child: InteractiveViewer(
+                  panEnabled: true,
+                  boundaryMargin: const EdgeInsets.all(20),
+                  minScale: 0.5,
+                  maxScale: 3,
+                  child: isLocalAsset
+                  ? Image.asset(
+                      currentImage,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Text('Error loading image', style: TextStyle(color: Colors.white)),
+                        );
+                      },
+                    )
+                  : Image.network(
+                    currentImage,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            : null,
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Text('Error loading image', style: TextStyle(color: Colors.white)),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

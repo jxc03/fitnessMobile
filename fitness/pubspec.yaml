@@ -25,3 +25,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/exercises/
+    - assets/images/exercises/barbell_back_squat/barbell_back_squat_1.jpg

@@ -451,27 +451,14 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
           elevation: 2,
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
-            leading: exercise['images'] != null && exercise['images'] != '' 
-                ? Image.network(
-                    exercise['images'],
-                    width: 50,
-                    height: 50,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 50,
-                        height: 50,
-                        color: Colors.grey.shade300,
-                        child: const Icon(Icons.fitness_center),
-                      );
-                    },
-                  )
-                : Container(
-                    width: 50,
-                    height: 50,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.fitness_center),
-                  ),
+            leading: exercise['images'] != null && exercise['images'].toString().isNotEmpty
+              ? _buildExerciseImage(exercise['images'], exercise['name'])
+              : Container(
+                  width: 50,
+                  height: 50,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.fitness_center),
+              ),
             title: Text(
               exercise['name'],
               style: const TextStyle(
@@ -516,6 +503,48 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     );
   }
   
+  // Helper to the _ExercisesScreenState class to build exercise image
+  Widget _buildExerciseImage(dynamic imagePath, String exerciseName) {
+    // Check if the image is a local asset path or a network URL
+    final bool isLocalAsset = imagePath != null && 
+                              !imagePath.toString().startsWith('http') && 
+                              !imagePath.toString().startsWith('https');
+
+    if (isLocalAsset) {
+      return Image.asset(
+        imagePath,
+        width: 50,
+        height: 50,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading image: $error');
+          return Container(
+            width: 50,
+            height: 50,
+            color: Colors.grey.shade300,
+            child: const Icon(Icons.fitness_center),
+          );
+        },
+      );
+    } else {
+      return Image.network(
+        imagePath,
+        width: 50,
+        height: 50,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 50,
+            height: 50,
+            color: Colors.grey.shade300,
+            child: const Icon(Icons.fitness_center),
+          );
+        },
+      );
+    }
+  }
+
+
   // Helper to check if a collection is not empty
   bool _isNotEmptyCollection(dynamic collection) {
     if (collection is List) return collection.isNotEmpty;
