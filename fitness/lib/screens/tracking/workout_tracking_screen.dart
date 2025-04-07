@@ -522,8 +522,8 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
             
             // Check if all sets are completed
             if (_isSetCompleted(_currentExerciseIndex)) {
-              // Analyze performance and suggest adjustments
-              _analyzePerformance(_currentExerciseIndex);
+              // Analyse performance and suggest adjustments
+              _analysePerformance(_currentExerciseIndex);
             }
           },
           child: const Text('Save'),
@@ -536,7 +536,7 @@ class _WorkoutTrackingScreenState extends State<WorkoutTrackingScreen> {
     return _completedSets[exerciseIndex]!.every((isCompleted) => isCompleted);
   }
 
-  void _analyzePerformance(int exerciseIndex) {
+  void _analysePerformance(int exerciseIndex) {
     final exercise = _exercises[exerciseIndex];
     final sets = exercise['sets'] as int? ?? 3;
     final performances = _setPerformances[exerciseIndex]!;
