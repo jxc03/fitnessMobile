@@ -27,4 +27,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/exercises/
-    - assets/images/exercises/barbell_back_squat/barbell_back_squat_1.jpg
+    - assets/images/exercises/barbell_back_squat/
+    - assets/images/exercises/barbell_bench_press/
+    - assets/images/exercises/barbell_curl/
+    - assets/images/exercises/barbell_overhead_press/
+    - assets/images/exercises/dumbbell_romanian_deadlift/
+    - assets/images/exercises/dumbbell_standing_calf_raise/
+    - assets/images/exercises/machine_seated_calf_raise/
+
