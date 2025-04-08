@@ -3,3 +3,8 @@ flutter pub add image_picker
 flutter pub add provider
 flutter pub add intl
 flutter pub add fl_chart
+
+dart pub add --dev test
+
+dart test
+flutter test
