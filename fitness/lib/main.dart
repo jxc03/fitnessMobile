@@ -29,6 +29,20 @@ void main() async {
   runApp(const MainApp());
 }
 
+class AppColors {
+  // Private constructor to prevent instantiation
+  AppColors._();
+  
+  // Colour palette for the whole app
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+}
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -38,9 +52,81 @@ class MainApp extends StatelessWidget {
       title: 'Fitness App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        // Use Material 3
         useMaterial3: true,
+        
+        // Primary color and generate colour scheme from it
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryColor,
+          primary: AppColors.primaryColor,
+          secondary: AppColors.secondaryColor,
+          tertiary: AppColors.accentGreen,
+          surface: AppColors.neutralLight,
+        ),
+        
+        // AppBar theme
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white, // Explicitly set title text color to white
+          ),
+        ),
+        
+        // Text theme
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: AppColors.neutralDark,
+          ),
+          titleMedium: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.neutralDark,
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.neutralDark,
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 16,
+            color: AppColors.neutralDark,
+          ),
+        ),
+        
+        // Card theme
+        cardTheme: CardTheme(
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: AppColors.neutralMid, width: 1),
+          ),
+        ),
+        
+        // BottomNavigationBar theme
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: AppColors.primaryColor,
+          unselectedItemColor: Color(0x993D5A6C), // neutralDark with 60% opacity
+          selectedLabelStyle: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+          elevation: 0,
+        ),
+        
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const AuthWrapper(),
       routes: {
@@ -56,7 +142,7 @@ class MainApp extends StatelessWidget {
         '/workout-progress': (context) => const WorkoutProgressScreen(),
         '/tracking': (context) => const TrackingScreen(),
       },
-      // Use onGenerateRoute for routes with parameters
+      // onGenerateRoute for routes with parameters
       onGenerateRoute: (settings) {
         if (settings.name == '/exercise-detail') {
           final exercise = settings.arguments as Map<String, dynamic>;
@@ -80,18 +166,17 @@ class AuthWrapper extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: authService.authStateChanges,
       builder: (context, snapshot) {
-        // If the snapshot has user data, then they're already signed in
+        // If the snapshot has user data, then theyre already signed in
         if (snapshot.hasData) {
           return const MainNavigationScreen();
         }
         
-        // Otherwise, they're not signed in
+        // Otherwise, theyre not signed in
         return const WelcomeScreen();
       },
     );
   }
 }
-
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -103,229 +188,286 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   
+  // To change tabs that can be called from child widgets
+  void changeTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+  
   // List of screens for bottom navigation
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const ExercisesScreen(),
-    const WorkoutPlansScreen(),
-    const TrackingScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Initialise screens with the navigation callback
+    _screens = [
+      HomeScreen(onNavigate: changeTab),
+      const ExercisesScreen(),
+      const WorkoutPlansScreen(),
+      const TrackingScreen(),
+      const ProfileScreen(),
+    ];
+  }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+          border: Border(
+            top: BorderSide(
+              color: AppColors.neutralMid,
+              width: 1,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fitness_center),
-            label: 'Exercises',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.format_list_bulleted),
-            label: 'Workouts',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: 'Tracking',
-          ),
-          BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
         ),
-        ],
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: changeTab,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.fitness_center_outlined),
+              activeIcon: Icon(Icons.fitness_center),
+              label: 'Exercises',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.format_list_bulleted_outlined),
+              activeIcon: Icon(Icons.format_list_bulleted),
+              label: 'Workouts',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.show_chart_outlined),
+              activeIcon: Icon(Icons.show_chart),
+              label: 'Tracking',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  // Callback function for navigation
+  final Function(int)? onNavigate;
+  
+  const HomeScreen({super.key, this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
     final authService = AuthService();
     final user = authService.currentUser;
+    
+    // Accessing theme colors and text styles
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Scaffold(
+      backgroundColor: AppColors.neutralLight,
       appBar: AppBar(
         title: const Text('Fitness App'),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Welcome section
-              Center(
-                child: Column(
-                  children: [
-                    const Text(
-                      'Welcome to your Fitness Journey!',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Display user name if available
-                    if (user != null && user.displayName != null)
-                      Text(
-                        'Hello, ${user.displayName}!',
-                        style: const TextStyle(fontSize: 18),
-                        textAlign: TextAlign.center,
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Quick access section
-              const Text(
-                'Quick Access',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-
-              // Quick access cards for primary features
-              Row(
-                children: [
-                  // Exercises card
-                  Expanded(
-                    child: _buildFeatureCard(
-                      context,
-                      icon: Icons.fitness_center,
-                      title: 'Exercises',
-                      color: Colors.blue.shade100,
-                      onTap: () {
-                        (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                            ?.setState(() {
-                          (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                              ?._currentIndex = 1;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Workout Plans card
-                  Expanded(
-                    child: _buildFeatureCard(
-                      context,
-                      icon: Icons.format_list_bulleted,
-                      title: 'Workout Plans',
-                      color: Colors.green.shade100,
-                      onTap: () {
-                        (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                            ?.setState(() {
-                          (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                              ?._currentIndex = 2;
-                        });
-                      },
-                    ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Welcome banner section
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 32),
-              
-              // Workout Tracking section
-              const Text(
-                'Workout Tracking',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: Column(
+                children: [
+                  Text(
+                    'Welcome to your Fitness Journey!',
+                    style: textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Display user name if available
+                  if (user != null && user.displayName != null)
+                    Text(
+                      'Hello, ${user.displayName}!',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: AppColors.neutralDark.withValues(alpha: 0.8),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                ],
               ),
-              const SizedBox(height: 16),
-              
-              // Tracking Card
-              _buildFeatureCard(
-                context,
-                icon: Icons.show_chart,
-                title: 'Track Your Progress',
-                color: Colors.purple.shade100,
-                isFullWidth: true,
-                onTap: () {
-                  (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                      ?.setState(() {
-                    (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                        ?._currentIndex = 3; // Index for Tracking tab
-                  });
-                },
+            ),
+
+            // Main content with padding
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Quick access section
+                  Text(
+                    'Quick Access',
+                    style: textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Quick access cards for primary features
+                  Row(
+                    children: [
+                      // Exercises card
+                      Expanded(
+                        child: _buildFeatureCard(
+                          context,
+                          icon: Icons.fitness_center,
+                          title: 'Exercises',
+                          color: AppColors.primaryColor.withValues(alpha: 0.1),
+                          iconColor: AppColors.primaryColor,
+                          onTap: () => onNavigate?.call(1),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Workout Plans card
+                      Expanded(
+                        child: _buildFeatureCard(
+                          context,
+                          icon: Icons.format_list_bulleted,
+                          title: 'Workout Plans',
+                          color: AppColors.accentGreen.withValues(alpha: 0.1),
+                          iconColor: AppColors.accentGreen,
+                          onTap: () => onNavigate?.call(2),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Workout Tracking section
+                  Text(
+                    'Workout Tracking',
+                    style: textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Tracking Card
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.show_chart,
+                    title: 'Track Your Progress',
+                    color: AppColors.secondaryColor.withValues(alpha: 0.1),
+                    iconColor: AppColors.secondaryColor,
+                    isFullWidth: true,
+                    onTap: () => onNavigate?.call(3),
+                  ),
+                  const SizedBox(height: 32),
+                  
+                  // Profile section
+                  Text(
+                    'Your Account',
+                    style: textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  _buildFeatureCard(
+                    context,
+                    icon: Icons.person,
+                    title: 'My Profile',
+                    color: AppColors.accentTeal.withValues(alpha: 0.1),
+                    iconColor: AppColors.accentTeal,
+                    isFullWidth: true,
+                    onTap: () => onNavigate?.call(4),
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
-              
-              // Profile section
-              _buildFeatureCard(
-                context,
-                icon: Icons.person,
-                title: 'My Profile',
-                color: Colors.grey.shade100,
-                isFullWidth: true,
-                onTap: () {
-                  (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                      ?.setState(() {
-                    (context.findAncestorStateOfType<_MainNavigationScreenState>())
-                        ?._currentIndex = 4;
-                  });
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
   
-  Widget _buildFeatureCard(BuildContext context, {
+  Widget _buildFeatureCard(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required Color color,
+    required Color iconColor,
     required VoidCallback onTap,
     bool isFullWidth = false,
     }
-  )
-  {
-  return Card(
-    elevation: 2,
-    color: color,
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: isFullWidth 
-            ? MainAxisAlignment.start 
-            : MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 28),
-            const SizedBox(width: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+  ) {
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: isFullWidth 
+              ? MainAxisAlignment.start 
+              : MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: iconColor,
+                ),
               ),
-            ),
-            if (isFullWidth) ...[
-              const Spacer(),
-              const Icon(Icons.arrow_forward_ios, size: 16),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              if (isFullWidth) ...[
+                const Spacer(),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppColors.neutralDark.withValues(alpha: 0.6),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
