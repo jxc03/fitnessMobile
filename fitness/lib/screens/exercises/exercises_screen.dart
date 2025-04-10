@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'exercise_details_screen.dart';
-
 import 'filter_dialog.dart';
 
 class ExercisesScreen extends StatefulWidget {
@@ -13,8 +12,17 @@ class ExercisesScreen extends StatefulWidget {
 }
 
 class _ExercisesScreenState extends State<ExercisesScreen> {
+  // Colour palette
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+
   // Selected filter category
-  String _selectedCategory = 'All Exercise';
+  final String _selectedCategory = 'All Exercise';
   
   // Filter options
   String _sortOption = 'Default';
@@ -63,7 +71,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
         final data = doc.data() as Map<dynamic, dynamic>;
         final Map<String, dynamic> exerciseData = {
           'id': doc.id,
-          'name': data['name'] ?? doc.id, // Using document ID as name as per your structure
+          'name': data['name'] ?? doc.id, // Using document ID as name
           'equipment': data['equipment'] ?? '',
           'instructions': data['instructions'] ?? {},
           'images': data['images'] ?? '',
@@ -180,7 +188,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     return result;
   }
 
-  // Add this method to show the filter dialog
+  // Method to show the filter dialog
   void _showFilterDialog() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -202,7 +210,6 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     }
   }
 
-
   // Add this method to display active filters
   Widget _buildActiveFilters() {
     List<Widget> chips = [];
@@ -211,13 +218,22 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     if (_sortOption != 'Default') {
       chips.add(
         Chip(
-          label: Text('Sort: $_sortOption'),
+          label: Text(
+            'Sort: $_sortOption',
+            style: const TextStyle(
+              color: primaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           onDeleted: () {
             setState(() {
               _sortOption = 'Default';
             });
           },
-          backgroundColor: Colors.blue.shade50,
+          deleteIconColor: primaryColor,
+          backgroundColor: primaryColor.withAlpha((0.1 * 255).toInt()),
+          side: BorderSide(color: primaryColor.withAlpha((0.3 * 255).toInt())),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
       );
     }
@@ -226,13 +242,22 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     for (final group in _selectedMuscleGroups) {
       chips.add(
         Chip(
-          label: Text(group),
+          label: Text(
+            group,
+            style: const TextStyle(
+              color: accentGreen,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           onDeleted: () {
             setState(() {
               _selectedMuscleGroups.remove(group);
             });
           },
-          backgroundColor: Colors.blue.shade100,
+          deleteIconColor: accentGreen,
+          backgroundColor: accentGreen.withValues(alpha: 0.1),
+          side: BorderSide(color: accentGreen.withValues(alpha: 0.3)),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
       );
     }
@@ -241,13 +266,22 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     for (final item in _selectedEquipment) {
       chips.add(
         Chip(
-          label: Text(item),
+          label: Text(
+            item,
+            style: const TextStyle(
+              color: secondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           onDeleted: () {
             setState(() {
               _selectedEquipment.remove(item);
             });
           },
-          backgroundColor: Colors.green.shade100,
+          deleteIconColor: secondaryColor,
+          backgroundColor: secondaryColor.withAlpha((0.1 * 255).toInt()),
+          side: BorderSide(color: secondaryColor.withAlpha((0.3 * 255).toInt())),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
         ),
       );
     }
@@ -256,36 +290,54 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       return const SizedBox.shrink();
     }
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'Active Filters:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _sortOption = 'Default';
-                  _selectedMuscleGroups = [];
-                  _selectedEquipment = [];
-                });
-              },
-              child: const Text('Clear All'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: chips,
-        ),
-        const SizedBox(height: 16),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: neutralLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: neutralMid, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Active Filters',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: neutralDark,
+                  fontSize: 15,
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _sortOption = 'Default';
+                    _selectedMuscleGroups = [];
+                    _selectedEquipment = [];
+                  });
+                },
+                icon: const Icon(Icons.clear_all, size: 16),
+                label: const Text('Clear All'),
+                style: TextButton.styleFrom(
+                  foregroundColor: primaryColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: chips,
+          ),
+        ],
+      ),
     );
   }
 
@@ -294,6 +346,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     final filteredExercises = _getFilteredExercises();
     
     return Scaffold(
+      backgroundColor: neutralLight,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -303,21 +356,61 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
               // Header section with Search and Filter
               _buildHeaderSection(),
               
+              const SizedBox(height: 20),
+              
+              // Section title with count
+              Row(
+                children: [
+                  Text(
+                    'Exercises',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: neutralDark,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withAlpha((0.1 * 255).toInt()),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${filteredExercises.length}',
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
               const SizedBox(height: 16),
               
-              
-              const SizedBox(height: 16),
-               // Active filters display
-
-               if (_selectedMuscleGroups.isNotEmpty || _selectedEquipment.isNotEmpty || _sortOption != 'Default')
+              // Active filters display
+              if (_selectedMuscleGroups.isNotEmpty || _selectedEquipment.isNotEmpty || _sortOption != 'Default') ...[
                 _buildActiveFilters(),
+                const SizedBox(height: 16),
+              ],
                 
               // Exercise list
               Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                        ),
+                      )
                     : _errorMessage != null
-                        ? Center(child: Text(_errorMessage!))
+                        ? Center(
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(color: Colors.red.shade700),
+                            ),
+                          )
                         : filteredExercises.isEmpty
                             ? _buildEmptyExerciseList()
                             : _buildExerciseList(filteredExercises),
@@ -329,52 +422,89 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     );
   }
 
-  // Header section with Search field and Filter button
+  // Header section with Search field and Filter button 
   Widget _buildHeaderSection() {
-    return Row(
-      children: [
-        // Search field
-        Expanded(
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search',
-              filled: true,
-              fillColor: Colors.grey.shade300,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide.none,
+    return Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha((0.05 * 255).toInt()),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Search field
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search exercises...',
+                hintStyle: TextStyle(color: neutralDark.withAlpha((0.5 * 255).toInt())),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                prefixIcon: Icon(Icons.search, color: primaryColor),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-              prefixIcon: const Icon(Icons.search),
+              style: TextStyle(
+                color: neutralDark,
+                fontSize: 16,
+              ),
+              onChanged: (value) {
+                setState(() {});
+              },
             ),
-            onChanged: (value) {
-              setState(() {
-                // This will trigger rebuild with filtered exercises
-              });
-            },
           ),
-        ),
-        
-        const SizedBox(width: 8),
-        
-        // Filter button
-        ElevatedButton(
-          onPressed: () {
-            _showFilterDialog();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.grey.shade300,
-            foregroundColor: Colors.black,
-            minimumSize: const Size(80, 45),
+          
+          // Vertical divider
+          Container(
+            height: 30,
+            width: 1,
+            color: neutralMid,
           ),
-          child: const Text('Filter'),
-        ),
-      ],
+          
+          // Filter button
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _showFilterDialog,
+              borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 52,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.tune,
+                      color: primaryColor,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Filter',
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
-
 
   // Empty state for exercise list
   Widget _buildEmptyExerciseList() {
@@ -382,17 +512,41 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Icon(
+            Icons.fitness_center,
+            size: 64,
+            color: neutralDark.withAlpha((0.3 * 255).toInt()),
+          ),
+          const SizedBox(height: 16),
           Text(
             'No exercises found',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey.shade700,
+              fontWeight: FontWeight.bold,
+              color: neutralDark,
             ),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
+          const SizedBox(height: 8),
+          Text(
+            'Try adjusting your filters or search terms',
+            style: TextStyle(
+              color: neutralDark.withAlpha((0.7 * 255).toInt()),
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
             onPressed: _fetchExercises,
-            child: const Text('Refresh'),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refresh'),
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: primaryColor,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
           ),
         ],
       ),
@@ -400,66 +554,190 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
   }
 
   // Exercise list populated with data from Firebase
-    Widget _buildExerciseList(List<Map<String, dynamic>> exercises) {
+  Widget _buildExerciseList(List<Map<String, dynamic>> exercises) {
     return ListView.builder(
       itemCount: exercises.length,
       itemBuilder: (context, index) {
         final exercise = exercises[index];
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
-          elevation: 2,
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: exercise['images'] != null && exercise['images'].toString().isNotEmpty
-              ? _buildExerciseImage(exercise['images'], exercise['name'])
-              : Container(
-                  width: 50,
-                  height: 50,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.fitness_center),
-              ),
-            title: Text(
-              exercise['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text('Equipment: ${exercise['equipment']}'),
-                
-                // Display muscle groups if available
-                if (exercise['muscleGroups'] != null && 
-                    _isNotEmptyCollection(exercise['muscleGroups']))
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: _buildMuscleGroupsPreview(exercise['muscleGroups']),
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: neutralMid, width: 1),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              _navigateToExerciseDetails(exercise);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Exercise image 
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: exercise['images'] != null && exercise['images'].toString().isNotEmpty
+                      ? _buildExerciseImage(exercise['images'], exercise['name'])
+                      : Container(
+                          width: 120,
+                          height: 140,
+                          color: neutralMid,
+                          child: Icon(
+                            Icons.fitness_center,
+                            color: neutralDark.withAlpha((0.7 * 255).toInt()),
+                            size: 40,
+                          ),
+                        ),
                   ),
-                // Display tags if available
-                if  (exercise['tags'] != null && exercise['tags'] is List && 
-                    (exercise['tags'] as List).isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      'Tags: ${(exercise['tags'] as List).join(', ')}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 16),
+                  
+                  // Exercise details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          exercise['name'],
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: neutralDark,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // Equipment
+                        _buildLabelBox(
+                          icon: Icons.fitness_center,
+                          text: exercise['equipment']?.toString() ?? 'No equipment',
+                          color: secondaryColor,
+                        ),
+                        const SizedBox(height: 6),
+                        
+                        // Display muscle groups if available
+                        if (exercise['muscleGroups'] != null && 
+                            _isNotEmptyCollection(exercise['muscleGroups']))
+                          _buildLabelBox(
+                            icon: Icons.accessibility_new,
+                            text: _getMuscleGroupText(exercise['muscleGroups']),
+                            color: accentGreen,
+                          ),
+                          
+                        // Add space if both muscle groups and tags exist
+                        if ((exercise['muscleGroups'] != null && 
+                            _isNotEmptyCollection(exercise['muscleGroups'])) &&
+                            (exercise['tags'] != null && exercise['tags'] is List && 
+                            (exercise['tags'] as List).isNotEmpty))
+                          const SizedBox(height: 6),
+                          
+                        // Display tags if available
+                        if (exercise['tags'] != null && exercise['tags'] is List && 
+                            (exercise['tags'] as List).isNotEmpty)
+                          _buildLabelBox(
+                            icon: Icons.tag,
+                            text: (exercise['tags'] as List).join(', '),
+                            color: accentTeal,
+                          ),
+                        
+                        const SizedBox(height: 12),
+                        
+                        // View details button
+                        ElevatedButton(
+                          onPressed: () {
+                            _navigateToExerciseDetails(exercise);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: primaryColor,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'View Details',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
+              ),
             ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // Navigate to exercise details screen
-              _navigateToExerciseDetails(exercise);
-            },
           ),
         );
       },
     );
+  }
+  
+  // Build styled label box for information
+  Widget _buildLabelBox({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withAlpha((0.7 * 255).toInt()),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: color.withAlpha((0.9 * 255).toInt()),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: color.withAlpha((0.9 * 255).toInt()),
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // Helper to get muscle group text for preview
+  String _getMuscleGroupText(dynamic muscleGroups) {
+    if (muscleGroups is List) {
+      if (muscleGroups.isEmpty) return 'None';
+      final displayed = muscleGroups.take(2).join(', ');
+      if (muscleGroups.length > 2) return '$displayed...';
+      return displayed;
+    } else if (muscleGroups is Map) {
+      if (muscleGroups.isEmpty) return 'None';
+      final values = muscleGroups.values.toList();
+      final displayed = values.take(2).join(', ');
+      if (values.length > 2) return '$displayed...';
+      return displayed;
+    } else if (muscleGroups is String) {
+      return muscleGroups;
+    }
+    return 'None';
   }
   
   // Helper to the _ExercisesScreenState class to build exercise image
@@ -469,40 +747,46 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
                               !imagePath.toString().startsWith('http') && 
                               !imagePath.toString().startsWith('https');
 
-    if (isLocalAsset) {
-      return Image.asset(
-        imagePath,
-        width: 50,
-        height: 50,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          print('Error loading image: $error');
-          return Container(
-            width: 50,
-            height: 50,
-            color: Colors.grey.shade300,
-            child: const Icon(Icons.fitness_center),
-          );
-        },
-      );
-    } else {
-      return Image.network(
-        imagePath,
-        width: 50,
-        height: 50,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: 50,
-            height: 50,
-            color: Colors.grey.shade300,
-            child: const Icon(Icons.fitness_center),
-          );
-        },
-      );
-    }
+    return Container(
+      width: 120,
+      height: 140,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: neutralMid, width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: isLocalAsset
+        ? Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              print('Error loading image: $error');
+              return Container(
+                color: neutralMid,
+                child: Icon(
+                  Icons.fitness_center,
+                  color: neutralDark.withAlpha((0.7 * 255).toInt()),
+                  size: 40,
+                ),
+              );
+            },
+          )
+        : Image.network(
+            imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: neutralMid,
+                child: Icon(
+                  Icons.fitness_center,
+                  color: neutralDark.withAlpha((0.7 * 255).toInt()),
+                  size: 40,
+                ),
+              );
+            },
+          ),
+    );
   }
-
 
   // Helper to check if a collection is not empty
   bool _isNotEmptyCollection(dynamic collection) {
@@ -512,7 +796,7 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     return false;
   }
   
-  // Build a preview of muscle groups for the list item
+  // Build preview of muscle groups for the list item
   Widget _buildMuscleGroupsPreview(dynamic muscleGroups) {
     String preview = '';
     
@@ -530,7 +814,11 @@ class _ExercisesScreenState extends State<ExercisesScreen> {
     }
     
     return Text(
-      'Muscle groups: $preview',
+      preview,
+      style: TextStyle(
+        color: neutralDark.withAlpha((0.8 * 255).toInt()),
+        fontSize: 14,
+      ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );

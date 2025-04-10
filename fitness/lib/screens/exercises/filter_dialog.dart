@@ -25,6 +25,15 @@ class _FilterDialogState extends State<FilterDialog> {
   late List<String> _selectedMuscleGroups;
   late List<String> _selectedEquipment;
 
+  // Colour palette
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+
   @override
   void initState() {
     super.initState();
@@ -42,119 +51,169 @@ class _FilterDialogState extends State<FilterDialog> {
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: neutralMid, width: 1),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Filter Exercises',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                border: Border(
+                  bottom: BorderSide(color: neutralMid, width: 1),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Filter Exercises',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: neutralDark,
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.close, color: neutralDark),
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
             ),
-            
-            const Divider(),
             
             // Scrollable content
             Flexible(
               child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Sort options
-                    const Text(
-                      'Sort By',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildSortOptions(),
-                    
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    
-                    // Muscle Groups filter
-                    const Text(
-                      'Muscle Groups',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildMuscleGroupsFilter(),
-                    
-                    const SizedBox(height: 16),
-                    const Divider(),
-                    
-                    // Equipment filter
-                    const Text(
-                      'Equipment',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildEquipmentFilter(),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      
+                      // Sort options section
+                      _buildSectionHeader('Sort By', Icons.sort),
+                      const SizedBox(height: 12),
+                      _buildSortOptions(),
+                      
+                      const SizedBox(height: 16),
+                      const Divider(color: neutralMid),
+                      const SizedBox(height: 16),
+                      
+                      // Muscle Groups filter
+                      _buildSectionHeader('Muscle Groups', Icons.accessibility_new),
+                      const SizedBox(height: 12),
+                      _buildMuscleGroupsFilter(),
+                      
+                      const SizedBox(height: 16),
+                      const Divider(color: neutralMid),
+                      const SizedBox(height: 16),
+                      
+                      // Equipment filter
+                      _buildSectionHeader('Equipment', Icons.fitness_center),
+                      const SizedBox(height: 12),
+                      _buildEquipmentFilter(),
+                      
+                      const SizedBox(height: 20),
+                    ],
+                  ),
                 ),
               ),
             ),
             
-            const SizedBox(height: 16),
-            
             // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _sortOption = 'Default';
-                      _selectedMuscleGroups = [];
-                      _selectedEquipment = [];
-                    });
-                  },
-                  child: const Text('Reset Filters'),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop({
-                      'sortOption': _sortOption,
-                      'muscleGroups': _selectedMuscleGroups,
-                      'equipment': _selectedEquipment,
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
+                border: Border(
+                  top: BorderSide(color: neutralMid, width: 1),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _sortOption = 'Default';
+                        _selectedMuscleGroups = [];
+                        _selectedEquipment = [];
+                      });
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    child: const Text(
+                      'Reset Filters',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
-                  child: const Text('Apply Filters'),
-                ),
-              ],
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop({
+                        'sortOption': _sortOption,
+                        'muscleGroups': _selectedMuscleGroups,
+                        'equipment': _selectedEquipment,
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Apply Filters',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // Section header with icon
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: primaryColor),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: neutralDark,
+          ),
+        ),
+      ],
     );
   }
 
@@ -170,7 +229,13 @@ class _FilterDialogState extends State<FilterDialog> {
 
   Widget _buildSortRadioTile(String title, String value) {
     return RadioListTile<String>(
-      title: Text(title),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: neutralDark,
+          fontWeight: _sortOption == value ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
       value: value,
       groupValue: _sortOption,
       onChanged: (newValue) {
@@ -178,6 +243,7 @@ class _FilterDialogState extends State<FilterDialog> {
           _sortOption = newValue!;
         });
       },
+      activeColor: primaryColor,
       contentPadding: EdgeInsets.zero,
       dense: true,
     );
@@ -191,11 +257,17 @@ class _FilterDialogState extends State<FilterDialog> {
         
     return Wrap(
       spacing: 8.0,
-      runSpacing: 4.0,
+      runSpacing: 8.0,
       children: muscleGroups.map((muscleGroup) {
         final isSelected = _selectedMuscleGroups.contains(muscleGroup);
         return FilterChip(
-          label: Text(muscleGroup),
+          label: Text(
+            muscleGroup,
+            style: TextStyle(
+              color: isSelected ? accentGreen : neutralDark,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
           selected: isSelected,
           onSelected: (selected) {
             setState(() {
@@ -206,9 +278,17 @@ class _FilterDialogState extends State<FilterDialog> {
               }
             });
           },
-          backgroundColor: Colors.grey.shade200,
-          selectedColor: Colors.blue.shade100,
-          checkmarkColor: Colors.blue,
+          backgroundColor: neutralLight,
+          selectedColor: accentGreen.withAlpha((0.12 * 255).toInt()),
+          checkmarkColor: accentGreen,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+            side: BorderSide(
+              color: isSelected ? accentGreen.withAlpha((0.3 * 255).toInt()) : neutralMid,
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         );
       }).toList(),
     );
@@ -222,11 +302,17 @@ class _FilterDialogState extends State<FilterDialog> {
         
     return Wrap(
       spacing: 8.0,
-      runSpacing: 4.0,
+      runSpacing: 8.0,
       children: equipment.map((equipment) {
         final isSelected = _selectedEquipment.contains(equipment);
         return FilterChip(
-          label: Text(equipment),
+          label: Text(
+            equipment,
+            style: TextStyle(
+              color: isSelected ? secondaryColor : neutralDark,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
           selected: isSelected,
           onSelected: (selected) {
             setState(() {
@@ -237,9 +323,17 @@ class _FilterDialogState extends State<FilterDialog> {
               }
             });
           },
-          backgroundColor: Colors.grey.shade200,
-          selectedColor: Colors.green.shade100,
-          checkmarkColor: Colors.green,
+          backgroundColor: neutralLight,
+          selectedColor: secondaryColor.withAlpha((0.12 * 255).toInt()),
+          checkmarkColor: secondaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+            side: BorderSide(
+              color: isSelected ? secondaryColor.withAlpha((0.3 * 255).toInt()) : neutralMid,
+              width: 1,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         );
       }).toList(),
     );

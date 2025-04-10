@@ -28,7 +28,7 @@ class ExerciseDetailScreen extends StatelessWidget {
     final instructions = exercise['instructions'];
     
     return Scaffold(
-      // App bar with updated styling
+      // App bar
       appBar: AppBar(
         title: Text(
           exercise['name'] ?? 'Exercise Details',
@@ -55,6 +55,7 @@ class ExerciseDetailScreen extends StatelessWidget {
           ),
         ],
       ),
+      backgroundColor: neutralLight,
       body: DefaultTabController(
         length: 4,
         child: NestedScrollView(
@@ -64,10 +65,10 @@ class ExerciseDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Exercise image with improved styling
+                    // Exercise image
                     _buildImageSection(exercise['images']),
                     
-                    // Information section with consistent card styling
+                    // Information section
                     _buildInfoSection(context),
                   ],
                 ),
@@ -99,7 +100,7 @@ class ExerciseDetailScreen extends StatelessWidget {
           },
           body: TabBarView(
             children: [
-              // Tab content with improved styling
+              // Tab content
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: _buildListSection(instructions != null ? instructions['steps'] : null),
@@ -219,7 +220,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 1),
@@ -276,11 +277,11 @@ class ExerciseDetailScreen extends StatelessWidget {
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.8),
+                  color: primaryColor.withValues(alpha: 0.8),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withOpacity(0.3),
+                      color: primaryColor.withValues(alpha: 0.3),
                       spreadRadius: 2,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
@@ -343,7 +344,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                 return LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, neutralDark.withOpacity(0.7)],
+                  colors: [Colors.transparent, neutralDark.withValues(alpha: 0.7)],
                   stops: const [0.7, 1.0],
                 ).createShader(rect);
               },
@@ -408,7 +409,7 @@ class ExerciseDetailScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.fitness_center, size: 60, color: neutralDark.withOpacity(0.7)),
+          Icon(Icons.fitness_center, size: 60, color: neutralDark.withValues(alpha: 0.7)),
           const SizedBox(height: 16),
           const Text(
             'No image available',
@@ -484,7 +485,7 @@ class ExerciseDetailScreen extends StatelessWidget {
   }
   
   
-  /// Build section for tags with improved chip design
+  /// Build section for tags
   Widget _buildTags(dynamic tags) {
     if (tags == null) {
       return const Text('No tags specified');
@@ -528,10 +529,10 @@ class ExerciseDetailScreen extends StatelessWidget {
     }
   }
   
-  /// Build a styled chip with icon and custom colors
+  /// Build styled chip with icon and custom colors
   Widget _buildStyledChip(String label, Color color, IconData icon) {
-    final Color backgroundColor = color.withOpacity(0.12);
-    final Color textAndIconColor = color.withOpacity(0.9);
+    final Color backgroundColor = color.withValues(alpha: 0.12);
+    final Color textAndIconColor = color.withValues(alpha: 0.9);
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -578,7 +579,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.photo_library, size: 40, color: neutralDark.withOpacity(0.4)),
+            Icon(Icons.photo_library, size: 40, color: neutralDark.withValues(alpha: 0.4)),
             const SizedBox(height: 12),
             const Text(
               'Photo gallery will be available soon',
@@ -589,7 +590,7 @@ class ExerciseDetailScreen extends StatelessWidget {
       );
     }
 
-    // Convert to a list if it's a single string
+    // Convert to a list if its a single string
     List<String> photoList = [];
     if (photos is String) {
       photoList = [photos];
@@ -619,7 +620,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
+                      color: Colors.grey.withValues(alpha: 0.2),
                       spreadRadius: 1,
                       blurRadius: 3,
                       offset: const Offset(0, 1),
@@ -635,7 +636,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: neutralLight,
-                            child: Icon(Icons.broken_image, color: neutralDark.withOpacity(0.5)),
+                            child: Icon(Icons.broken_image, color: neutralDark.withValues(alpha: 0.5)),
                           );
                         },
                       )
@@ -645,7 +646,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: neutralLight,
-                            child: Icon(Icons.broken_image, color: neutralDark.withOpacity(0.5)),
+                            child: Icon(Icons.broken_image, color: neutralDark.withValues(alpha: 0.5)),
                           );
                         },
                       ),
@@ -729,7 +730,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                 bottom: 20,
                 left: 0,
                 right: 0,
-                child: Container(
+                child: SizedBox(
                   height: 70,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
@@ -804,7 +805,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.info_outline, size: 48, color: neutralDark.withOpacity(0.4)),
+            Icon(Icons.info_outline, size: 48, color: neutralDark.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
               'No information available',
@@ -886,11 +887,12 @@ class ExerciseDetailScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: neutralMid, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.07),
-            spreadRadius: 1,
-            blurRadius: 3,
+            color: Colors.grey.withValues(alpha: 0.05),
+            spreadRadius: 0,
+            blurRadius: 2,
             offset: const Offset(0, 1),
           ),
         ],
@@ -911,7 +913,7 @@ class ExerciseDetailScreen extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withOpacity(0.2),
+                  color: primaryColor.withValues(alpha: 0.2),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -954,7 +956,15 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: const Color(0xFFE1E7ED), // neutralMid
+            width: 1,
+          ),
+        ),
+      ),
       child: tabBar,
     );
   }
