@@ -20,6 +20,15 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   bool _isEditing = false;
   bool _isLoadingPlan = false;
 
+  // Appc olour palette
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+
   @override
   void initState() {
     super.initState();
@@ -49,7 +58,15 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
           // Not the owner, show error and go back
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('You do not have permission to edit this workout plan')),
+              SnackBar(
+                content: const Text('You do not have permission to edit this workout plan'),
+                backgroundColor: Colors.red.shade700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                margin: const EdgeInsets.all(16),
+              ),
             );
             Navigator.pop(context);
           }
@@ -63,15 +80,33 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Workout plan not found')),
+            SnackBar(
+              content: const Text('Workout plan not found'),
+              backgroundColor: Colors.red.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
           );
           Navigator.pop(context);
         }
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading workout plan: $error')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading workout plan: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
     } finally {
       setState(() {
         _isLoadingPlan = false;
@@ -89,11 +124,25 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: neutralLight,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Workout Plan' : 'Create Workout Plan'),
+        title: Text(
+          _isEditing ? 'Edit Workout Plan' : 'Create Workout Plan',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: _isLoadingPlan
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+              ),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -101,45 +150,198 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Workout Plan Name',
-                        hintText: 'e.g., Full Body Workout, Upper/Lower Split',
-                        border: OutlineInputBorder(),
+                    // Workout Plan Info Card
+                    _buildSectionCard(
+                      title: 'Workout Plan Information',
+                      icon: Icons.fitness_center,
+                      content: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
+                          // Name field
+                          TextFormField(
+                            controller: _nameController,
+                            style: TextStyle(
+                              color: neutralDark,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Plan Name',
+                              hintText: 'e.g., Full Body Workout, Upper/Lower Split',
+                              labelStyle: TextStyle(
+                                color: neutralDark.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              hintStyle: TextStyle(
+                                color: neutralDark.withValues(alpha: 0.5),
+                                fontSize: 14,
+                              ),
+                              filled: false,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: neutralMid, width: 1),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: neutralMid, width: 1),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: primaryColor, width: 1.5),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.red.shade700, width: 1),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.red.shade700, width: 1.5),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a name for your workout plan';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // Description field
+                          TextFormField(
+                            controller: _descriptionController,
+                            style: TextStyle(
+                              color: neutralDark,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            decoration: InputDecoration(
+                              labelText: 'Description (optional)',
+                              hintText: 'Describe your workout plan goals and structure',
+                              labelStyle: TextStyle(
+                                color: neutralDark.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              hintStyle: TextStyle(
+                                color: neutralDark.withValues(alpha: 0.5),
+                                fontSize: 14,
+                              ),
+                              filled: false,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: neutralMid, width: 1),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: neutralMid, width: 1),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: primaryColor, width: 2),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            ),
+                            maxLines: 5,
+                          ),
+                        ],
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a name for your workout plan';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description (optional)',
-                        hintText: 'Describe your workout plan',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 5,
-                    ),
-                    const SizedBox(height: 32),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Submit button
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _saveWorkoutPlan,
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          disabledBackgroundColor: primaryColor.withValues(alpha: 0.5),
+                        ),
                         child: _isLoading
-                            ? const CircularProgressIndicator()
+                            ? SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                  strokeWidth: 2.5,
+                                ),
+                              )
                             : Text(_isEditing ? 'Update Plan' : 'Create Plan'),
                       ),
                     ),
+                    
+                    // Help text below button
+                    if (!_isEditing)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Text(
+                          'You can add exercises to your workout plan after creation.',
+                          style: TextStyle(
+                            color: neutralDark.withValues(alpha: 0.6),
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  // Helper method to build a section card
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Widget content,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: neutralMid, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Card header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: neutralDark,
+              ),
+            ),
+          ),
+          
+          // Divider
+          Divider(color: neutralMid, height: 1),
+          
+          // Card content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: content,
+          ),
+        ],
+      ),
     );
   }
 
@@ -167,7 +369,15 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Workout plan updated successfully')),
+            SnackBar(
+              content: const Text('Workout plan updated successfully'),
+              backgroundColor: accentGreen,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
           );
           Navigator.pop(context, true); // Return success
         }
@@ -186,7 +396,15 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Workout plan created successfully')),
+            SnackBar(
+              content: const Text('Workout plan created successfully'),
+              backgroundColor: accentGreen,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
           );
           Navigator.pop(context, true); // Return success
         }
@@ -198,7 +416,15 @@ class _CreateWorkoutPlanScreenState extends State<CreateWorkoutPlanScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving workout plan: $error')),
+          SnackBar(
+            content: Text('Error saving workout plan: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'workout_plan_details_screen.dart';
 import 'create_workout_plan_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer';
 
 class WorkoutPlansScreen extends StatefulWidget {
   const WorkoutPlansScreen({super.key});
@@ -15,6 +16,15 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _workoutPlans = [];
   String? _errorMessage;
+
+  // App colour palette 
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
 
   @override
   void initState() {
@@ -62,31 +72,59 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
         _errorMessage = 'Failed to load workout plans: $error';
         _isLoading = false;
       });
-      print('Error fetching workout plans: $error');
+      log('Error fetching workout plans: $error', name: 'WorkoutPlansScreen');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: neutralLight,
       appBar: AppBar(
-        title: const Text('Workout Plans'),
+        title: const Text(
+          'Workout Plans',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: _buildBody(),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreateWorkoutPlan(),
-        child: const Icon(Icons.add),
+        backgroundColor: primaryColor,
+        elevation: 2,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Create Workout Plan',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+        ),
+      );
     }
 
     if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!));
+      return Center(
+        child: Text(
+          _errorMessage!,
+          style: TextStyle(color: Colors.red.shade700),
+        ),
+      );
     }
 
     if (_workoutPlans.isEmpty) {
@@ -111,7 +149,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
           Icon(
             Icons.fitness_center,
             size: 80,
-            color: Colors.grey.shade400,
+            color: neutralDark.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -119,14 +157,15 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade700,
+              color: neutralDark,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Create your first workout plan to get started!',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: neutralDark.withValues(alpha: 0.7),
+              fontSize: 16,
             ),
           ),
           const SizedBox(height: 24),
@@ -135,9 +174,14 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
             icon: const Icon(Icons.add),
             label: const Text('Create Workout Plan'),
             style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(
                 horizontal: 24,
                 vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
             ),
           ),
@@ -146,17 +190,24 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     );
   }
 
-  Widget _buildWorkoutPlanCard(Map<String, dynamic> plan) {
+ Widget _buildWorkoutPlanCard(Map<String, dynamic> plan) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      child: InkWell(
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: neutralMid, width: 1),
+      ),
+      child: InkWell( // If the user clicks on the card
         onTap: () => _navigateToWorkoutPlanDetail(plan['id']),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Card header with title and menu
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -166,6 +217,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
+                        color: neutralDark,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -179,24 +231,40 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                         _confirmDeleteWorkoutPlan(plan['id'], plan['name']);
                       }
                     },
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: neutralDark.withValues(alpha: 0.7),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: neutralMid, width: 1),
+                    ),
+                    color: Colors.white,
+                    elevation: 1,
                     itemBuilder: (context) => [
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
+                            Icon(Icons.edit, size: 18, color: primaryColor),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Edit',
+                              style: TextStyle(color: neutralDark),
+                            ),
                           ],
                         ),
                       ),
-                      const PopupMenuItem<String>(
+                      PopupMenuItem<String>(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 18),
-                            SizedBox(width: 8),
-                            Text('Delete'),
+                            Icon(Icons.delete, size: 18, color: Colors.red.shade700),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red.shade700),
+                            ),
                           ],
                         ),
                       ),
@@ -210,7 +278,8 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                   child: Text(
                     plan['description'],
                     style: TextStyle(
-                      color: Colors.grey.shade700,
+                      color: neutralDark.withValues(alpha: 0.7),
+                      fontSize: 14,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -219,21 +288,103 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${plan['exerciseCount']} exercise${plan['exerciseCount'] != 1 ? 's' : ''}',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: Colors.grey.shade600,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoBox(
+                        icon: Icons.fitness_center, 
+                        text: '${plan['exerciseCount']} exercise${plan['exerciseCount'] != 1 ? 's' : ''}',
+                        color: secondaryColor,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () => _navigateToWorkoutPlanDetail(plan['id']),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'View Details',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoBox({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: color.withValues(alpha: 0.9),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewDetailsButton() {
+    return Container(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: null, // This is handled by the InkWell on the entire card
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: primaryColor,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: const Text(
+          'View Details',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
       ),
@@ -273,27 +424,46 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Workout Plan'),
+          title: Text(
+            'Delete Workout Plan',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: neutralDark,
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: neutralMid, width: 1),
+          ),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Are you sure you want to delete "$planName"?'),
+                Text(
+                  'Are you sure you want to delete "$planName"?',
+                  style: TextStyle(color: neutralDark),
+                ),
                 const SizedBox(height: 8),
-                const Text('This action cannot be undone.'),
+                Text(
+                  'This action cannot be undone.',
+                  style: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                ),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: primaryColor),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text(
+              child: Text(
                 'Delete',
-                style: TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.red.shade700),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -313,13 +483,29 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Workout plan deleted successfully')),
+          SnackBar(
+            content: const Text('Workout plan deleted successfully'),
+            backgroundColor: accentGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting workout plan: $error')),
+          SnackBar(
+            content: Text('Error deleting workout plan: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }

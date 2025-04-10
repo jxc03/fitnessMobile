@@ -22,6 +22,15 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
   List<Map<String, dynamic>> _filteredExercises = [];
   String? _errorMessage;
 
+  // App colour palette
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+
   // Available muscle groups for filtering
   final List<String> _muscleGroups = [
     'All',
@@ -175,13 +184,24 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: neutralLight,
       appBar: AppBar(
-        title: const Text('Add Exercises'),
+        title: const Text(
+          'Add Exercises',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Column(
         children: [
           // Search and filter bar
-          Padding(
+          Container(
+            color: Colors.white,
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
@@ -189,21 +209,35 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search exercises',
+                    hintText: 'Search exercises...',
+                    hintStyle: TextStyle(color: neutralDark.withValues(alpha: 0.5)),
                     filled: true,
-                    fillColor: Colors.grey.shade200,
+                    fillColor: neutralLight,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: neutralMid, width: 1),
                     ),
-                    prefixIcon: const Icon(Icons.search),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: neutralMid, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: primaryColor, width: 1.5),
+                    ),
+                    prefixIcon: Icon(Icons.search, color: primaryColor),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  ),
+                  style: TextStyle(
+                    color: neutralDark,
+                    fontSize: 16,
                   ),
                   onChanged: (value) {
                     _applyFilters();
                   },
                 ),
                 
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 
                 // Muscle group filter
                 SingleChildScrollView(
@@ -214,7 +248,13 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: FilterChip(
-                          label: Text(muscleGroup),
+                          label: Text(
+                            muscleGroup,
+                            style: TextStyle(
+                              color: isSelected ? accentGreen : neutralDark,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
                           selected: isSelected,
                           onSelected: (selected) {
                             setState(() {
@@ -222,8 +262,17 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                               _applyFilters();
                             });
                           },
-                          backgroundColor: Colors.grey.shade200,
-                          selectedColor: Colors.blue.shade100,
+                          backgroundColor: neutralLight,
+                          selectedColor: accentGreen.withValues(alpha: 0.12),
+                          checkmarkColor: accentGreen,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            side: BorderSide(
+                              color: isSelected ? accentGreen.withValues(alpha: 0.3) : neutralMid,
+                              width: 1,
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
                       );
                     }).toList(),
@@ -235,15 +284,21 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
 
           // Selected exercises count
           if (_selectedExercises.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: neutralMid, width: 1),
+                  bottom: BorderSide(color: neutralMid, width: 1),
+                ),
+              ),
               child: Row(
                 children: [
-                  Text(
-                    '${_selectedExercises.length} exercise${_selectedExercises.length != 1 ? 's' : ''} selected',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  _buildInfoBox(
+                    icon: Icons.fitness_center,
+                    text: '${_selectedExercises.length} exercise${_selectedExercises.length != 1 ? 's' : ''} selected',
+                    color: primaryColor,
                   ),
                   const Spacer(),
                   TextButton(
@@ -252,7 +307,14 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                         _selectedExercises.clear();
                       });
                     },
-                    child: const Text('Clear All'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    ),
+                    child: const Text(
+                      'Clear All',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ],
               ),
@@ -261,31 +323,98 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
           // Exercise list
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    ),
+                  )
                 : _errorMessage != null
-                    ? Center(child: Text(_errorMessage!))
+                    ? Center(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.red.shade700),
+                        ),
+                      )
                     : _filteredExercises.isEmpty
                         ? _buildEmptyState()
                         : _buildExerciseList(),
           ),
 
-          // Add selected exercises button
+          // Selected exercises button
           if (_selectedExercises.isNotEmpty)
-            Padding(
+            Container(
               padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: neutralMid, width: 1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    offset: const Offset(0, -2),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
               child: SizedBox(
                 width: double.infinity,
-                height: 50,
                 child: ElevatedButton(
                   onPressed: _addSelectedExercisesToWorkout,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   child: const Text('Add Selected Exercises'),
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoBox({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: color.withValues(alpha: 0.9),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );
@@ -298,23 +427,24 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
         children: [
           Icon(
             Icons.search_off,
-            size: 64,
-            color: Colors.grey.shade400,
+            size: 80,
+            color: neutralDark.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
             'No exercises found',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade700,
+              color: neutralDark,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Try changing your search or filters',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: neutralDark.withValues(alpha: 0.7),
+              fontSize: 16,
             ),
           ),
         ],
@@ -324,7 +454,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
 
   Widget _buildExerciseList() {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
       itemCount: _filteredExercises.length,
       itemBuilder: (context, index) {
         final exercise = _filteredExercises[index];
@@ -332,57 +462,148 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
         final isSelected = _selectedExercises.containsKey(exerciseId);
         
         return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: CheckboxListTile(
-            title: Text(
-              exercise['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 0,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: neutralMid, width: 1),
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              checkboxTheme: CheckboxThemeData(
+                checkColor: WidgetStateProperty.all(Colors.white),
+                fillColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return primaryColor;
+                  }
+                  return Colors.transparent; // Transparent when not selected
+                }),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                side: BorderSide(
+                  width: 1.5,
+                  color: isSelected ? primaryColor : neutralMid,
+                ),
+                splashRadius: 0,
               ),
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Equipment: ${exercise['equipment']}'),
-                if (exercise['muscleGroups'] is List && exercise['muscleGroups'].isNotEmpty)
-                  Text('Muscle Groups: ${(exercise['muscleGroups'] as List).join(', ')}'),
-                if (exercise['tags'] is List && exercise['tags'].isNotEmpty)
-                  Text('Tags: ${(exercise['tags'] as List).join(', ')}'),
-              ],
+            child: CheckboxListTile(
+              title: Text(
+                exercise['name'],
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: neutralDark,
+                ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 6),
+                  if (exercise['equipment'] != null && exercise['equipment'].toString().isNotEmpty)
+                    _buildExerciseInfoTag(
+                      label: 'Equipment', 
+                      value: exercise['equipment'].toString(),
+                      color: secondaryColor,
+                    ),
+                  const SizedBox(height: 6),
+                  if (exercise['muscleGroups'] is List && exercise['muscleGroups'].isNotEmpty)
+                    _buildExerciseInfoTag(
+                      label: 'Muscle Groups', 
+                      value: (exercise['muscleGroups'] as List).join(', '),
+                      color: accentGreen,
+                    ),
+                  const SizedBox(height: 6),
+                  if (exercise['tags'] is List && exercise['tags'].isNotEmpty)
+                    _buildExerciseInfoTag(
+                      label: 'Tags', 
+                      value: (exercise['tags'] as List).join(', '),
+                      color: accentTeal,
+                    ),
+                ],
+              ),
+              value: isSelected,
+              onChanged: (value) {
+                setState(() {
+                  if (value == true) {
+                    // Add to selected
+                    _selectedExercises[exerciseId] = {
+                      'exerciseId': exerciseId,
+                      'exerciseName': exercise['name'],
+                      'sets': 3,
+                      'reps': '10-12',
+                      'rest': 60,
+                      'weight': 0.0,
+                      'weightUnit': 'kg',
+                      'notes': '',
+                      'order': _selectedExercises.length,
+                    };
+                  } else {
+                    // Remove from selected
+                    _selectedExercises.remove(exerciseId);
+                  }
+                });
+              },
+              secondary: isSelected
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.settings,
+                        color: primaryColor,
+                        size: 24,
+                      ),
+                      onPressed: () => _showExerciseSettingsDialog(exerciseId, exercise['name']),
+                      tooltip: 'Exercise Settings',
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
+                    )
+                  : null,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              isThreeLine: true,
+              checkboxShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
+              // Control the checkbox appearance
+              activeColor: primaryColor,
+              dense: false,
             ),
-            value: isSelected,
-            onChanged: (value) {
-              setState(() {
-                if (value == true) {
-                  // Add to selected
-                  _selectedExercises[exerciseId] = {
-                    'exerciseId': exerciseId,
-                    'exerciseName': exercise['name'],
-                    'sets': 3,
-                    'reps': '10-12',
-                    'rest': 60,
-                    'weight': 0.0,
-                    'weightUnit': 'kg',
-                    'notes': '',
-                    'order': _selectedExercises.length,
-                  };
-                } else {
-                  // Remove from selected
-                  _selectedExercises.remove(exerciseId);
-                }
-              });
-            },
-            secondary: isSelected
-                ? IconButton(
-                    icon: const Icon(Icons.settings),
-                    onPressed: () => _showExerciseSettingsDialog(exerciseId, exercise['name']),
-                    tooltip: 'Exercise Settings',
-                  )
-                : null,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildExerciseInfoTag({
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label: ',
+          style: TextStyle(
+            color: neutralDark.withValues(alpha: 0.7),
+            fontSize: 14,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+      ],
     );
   }
 
@@ -400,7 +621,18 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(exerciseName),
+        title: Text(
+          exerciseName,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: neutralDark,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: neutralMid, width: 1),
+        ),
         content: Form(
           key: formKey,
           child: SingleChildScrollView(
@@ -409,9 +641,17 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               children: [
                 TextFormField(
                   initialValue: sets.toString(),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Sets',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: primaryColor, width: 1.5),
+                    ),
                   ),
                   keyboardType: TextInputType.number,
                   validator: (value) {
@@ -430,9 +670,17 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   initialValue: reps,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Reps (e.g., "10" or "8-12")',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: primaryColor, width: 1.5),
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -447,9 +695,17 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   initialValue: rest.toString(),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Rest (seconds)',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: primaryColor, width: 1.5),
+                    ),
                   ),
                   keyboardType: TextInputType.number,
                   validator: (value) {
@@ -474,9 +730,17 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                       flex: 2,
                       child: TextFormField(
                         initialValue: weight.toString(),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Weight',
-                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryColor, width: 1.5),
+                          ),
                         ),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (value) {
@@ -498,9 +762,17 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     Expanded(
                       flex: 1,
                       child: DropdownButtonFormField<String>(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Unit',
-                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: primaryColor, width: 1.5),
+                          ),
                         ),
                         value: weightUnit,
                         items: const [
@@ -523,9 +795,17 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   initialValue: notes,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Notes (optional)',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: primaryColor, width: 1.5),
+                    ),
                   ),
                   maxLines: 3,
                   onSaved: (value) {
@@ -539,9 +819,12 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: primaryColor),
+            ),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
                 formKey.currentState!.save();
@@ -563,6 +846,14 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 Navigator.of(context).pop();
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: const Text('Save'),
           ),
         ],
@@ -570,7 +861,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     );
   }
 
-  Future<void> _addSelectedExercisesToWorkout() async {
+Future<void> _addSelectedExercisesToWorkout() async {
     if (_selectedExercises.isEmpty) {
       return;
     }
@@ -579,8 +870,10 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
+      builder: (context) => Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+        ),
       ),
     );
 
@@ -629,7 +922,15 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
         Navigator.of(context).pop();
         
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding exercises: $error')),
+          SnackBar(
+            content: Text('Error adding exercises: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }

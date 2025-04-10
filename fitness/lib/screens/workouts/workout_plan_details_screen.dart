@@ -5,6 +5,8 @@ import 'add_exercise_screen.dart';
 import '../tracking/workout_tracking_screen.dart';
 import '../tracking/workout_history_screen.dart';
 import '../tracking/workout_progress_screen.dart';
+import 'dart:developer'; // For using the log method
+import 'dart:ui' show lerpDouble; // To drag exercises
 
 class WorkoutPlanDetailScreen extends StatefulWidget {
   final String planId;
@@ -22,6 +24,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _workoutPlan;
   String? _errorMessage;
+
+  // App colour palette
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
 
   @override
   void initState() {
@@ -66,15 +77,29 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         _errorMessage = 'Failed to load workout plan details: $error';
         _isLoading = false;
       });
-      print('Error fetching workout plan details: $error');
+      log('Error fetching workout plan details: $error', name: 'WorkoutPlanDetailScreen');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: neutralLight,
       appBar: AppBar(
-        title: Text(_isLoading ? 'Workout Plan' : _workoutPlan?['name'] ?? 'Workout Plan'),
+        title: Text(
+          _isLoading ? 'Workout Plan' : _workoutPlan?['name'] ?? 'Workout Plan',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
           if (!_isLoading && _workoutPlan != null) ... [
             // Analytics button
@@ -94,7 +119,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ListTile(
-                            leading: const Icon(Icons.history),
+                            leading: Icon(Icons.history, color: primaryColor),
                             title: const Text('Workout History'),
                             subtitle: const Text('View your past workouts'),
                             onTap: () {
@@ -107,9 +132,9 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                               );
                             },
                           ),
-                          const Divider(),
+                          Divider(color: neutralMid),
                           ListTile(
-                            leading: const Icon(Icons.show_chart),
+                            leading: Icon(Icons.show_chart, color: primaryColor),
                             title: const Text('Progress Analytics'),
                             subtitle: const Text('Track your exercise improvements'),
                             onTap: () {
@@ -139,24 +164,49 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         ],
       ),
       body: _buildBody(),
-      floatingActionButton: !_isLoading && _workoutPlan != null ? FloatingActionButton(
-        onPressed: () => _navigateToAddExercise(),
-        child: const Icon(Icons.add),
-      ) : null,
+      floatingActionButton: !_isLoading && _workoutPlan != null 
+        ? FloatingActionButton.extended(
+            onPressed: () => _navigateToAddExercise(),
+            backgroundColor: primaryColor,
+            elevation: 2,
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text(
+              'Add Exercise',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ) 
+        : null,
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+        ),
+      );
     }
 
     if (_errorMessage != null) {
-      return Center(child: Text(_errorMessage!));
+      return Center(
+        child: Text(
+          _errorMessage!,
+          style: TextStyle(color: Colors.red.shade700),
+        ),
+      );
     }
 
     if (_workoutPlan == null) {
-      return const Center(child: Text('Workout plan not found'));
+      return Center(
+        child: Text(
+          'Workout plan not found',
+          style: TextStyle(color: neutralDark),
+        ),
+      );
     }
 
     final exercises = _workoutPlan!['exercises'] as List;
@@ -165,7 +215,9 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Workout Plan Info Section
-        Padding(
+        Container(
+          width: double.infinity,
+          color: Colors.white,
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,22 +227,18 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                   _workoutPlan!['description'],
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey.shade700,
+                    color: neutralDark.withValues(alpha: 0.8),
                   ),
                 ),
               const SizedBox(height: 8),
-              Text(
-                '${exercises.length} exercise${exercises.length != 1 ? 's' : ''}',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
+              _buildInfoBox(
+                icon: Icons.fitness_center, 
+                text: '${exercises.length} exercise${exercises.length != 1 ? 's' : ''}',
+                color: secondaryColor,
               ),
             ],
           ),
         ),
-
-        const Divider(),
 
         // Exercises Section
         Expanded(
@@ -202,6 +250,43 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  Widget _buildInfoBox({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: color.withValues(alpha: 0.9),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyExercisesState() {
     return Center(
       child: Column(
@@ -210,7 +295,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           Icon(
             Icons.fitness_center,
             size: 80,
-            color: Colors.grey.shade400,
+            color: neutralDark.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -218,14 +303,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade700,
+              color: neutralDark,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Add exercises to your workout plan',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: neutralDark.withValues(alpha: 0.7),
+              fontSize: 16,
             ),
           ),
           const SizedBox(height: 24),
@@ -234,9 +320,19 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
             icon: const Icon(Icons.add),
             label: const Text('Add Exercise'),
             style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(
                 horizontal: 24,
-                vertical: 12,
+                vertical: 16,
+              ),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
           ),
@@ -246,37 +342,72 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
   }
 
   Widget _buildExercisesList(List exercises) {
-    return ReorderableListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: exercises.length,
-      onReorder: (oldIndex, newIndex) {
-        setState(() {
-          if (oldIndex < newIndex) {
-            newIndex -= 1;
-          }
-          final item = exercises.removeAt(oldIndex);
-          exercises.insert(newIndex, item);
-          
-          // Update the order field for each exercise
-          for (int i = 0; i < exercises.length; i++) {
-            exercises[i]['order'] = i;
-          }
-          
-          // Save the updated order to Firestore
-          _updateExercisesOrder(exercises);
-        });
-      },
-      itemBuilder: (context, index) {
-        final exercise = exercises[index];
-        return _buildExerciseCard(exercise, index);
-      },
+    return Theme(
+      // Override the default selection color/behavior when dragging
+      data: Theme.of(context).copyWith(
+        canvasColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+      ),
+      child: ReorderableListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: exercises.length,
+        buildDefaultDragHandles: false, // Disables the default drag handles
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (oldIndex < newIndex) {
+              newIndex -= 1;
+            }
+            final item = exercises.removeAt(oldIndex);
+            exercises.insert(newIndex, item);
+
+            // Update the order field for each exercise
+            for (int i = 0; i < exercises.length; i++) {
+              exercises[i]['order'] = i;
+            }
+
+            // Save the updated order to Firestore
+            _updateExercisesOrder(exercises);
+          });
+        },
+        // Custom drag feedback to make the dragging experience cleaner
+        proxyDecorator: (Widget child, int index, Animation<double> animation) {
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (BuildContext context, Widget? child) {
+              return Material(
+                elevation: 4.0 * animation.value,
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.transparent,
+                shadowColor: Colors.black.withValues(alpha: 0.1),
+                child: child,
+              );
+            },
+            child: child,
+          );
+        },
+        itemBuilder: (context, index) {
+          final exercise = exercises[index];
+          // Make the entire card draggable
+          return ReorderableDragStartListener(
+            key: ValueKey(exercise['exerciseId'] ?? index),
+            index: index,
+            child: _buildExerciseCard(exercise, index),
+          );
+        },
+      ),
     );
   }
+  
 
   Widget _buildExerciseCard(Map<String, dynamic> exercise, int index) {
     return Card(
-      key: ValueKey(exercise['exerciseId'] ?? index),
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: neutralMid, width: 1),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -284,11 +415,22 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           children: [
             // Exercise number indicator
             Container(
-              width: 28,
-              height: 28,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
-                color: Colors.blue,
+                gradient: LinearGradient(
+                  colors: [secondaryColor, primaryColor],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Center(
                 child: Text(
@@ -296,6 +438,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -312,18 +455,21 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: neutralDark,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
+                  
+                  // Exercise parameters
                   Wrap(
-                    spacing: 16,
-                    runSpacing: 8,
+                    spacing: 20,
+                    runSpacing: 12,
                     children: [
                       _buildExerciseDetail('Sets', '${exercise['sets'] ?? 3}'),
                       _buildExerciseDetail('Reps', exercise['reps'] ?? '10-12'),
                       _buildExerciseDetail('Rest', '${exercise['rest'] ?? 60}s'),
                     
-                      // Show weight if it's greater than 0
+                      // Show weight if its greater than 0
                       if ((exercise['weight'] ?? 0) > 0)
                         _buildExerciseDetail(
                           'Weight', 
@@ -331,14 +477,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                         ),
                     ],
                   ),
+                  
+                  // Notes, if any
                   if (exercise['notes'] != null && exercise['notes'].isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.only(top: 10),
                       child: Text(
                         'Note: ${exercise['notes']}',
                         style: TextStyle(
                           fontStyle: FontStyle.italic,
-                          color: Colors.grey.shade700,
+                          color: neutralDark.withValues(alpha: 0.7),
                           fontSize: 14,
                         ),
                       ),
@@ -347,29 +495,72 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
             ),
             
-            // Action buttons
+            // Action buttons column
             Column(
               children: [
+                // Info button
                 IconButton(
-                  icon: const Icon(Icons.info_outline, size: 20),
+                  icon: Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: neutralDark.withValues(alpha: 0.7),
+                  ),
                   onPressed: () => _navigateToExerciseDetails(exercise['exerciseId']),
                   tooltip: 'View Exercise Details',
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  padding: EdgeInsets.zero,
                 ),
+                
+                // Edit button
                 IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
+                  icon: Icon(
+                    Icons.edit,
+                    size: 20,
+                    color: neutralDark.withValues(alpha: 0.7),
+                  ),
                   onPressed: () => _editExercise(exercise, index),
                   tooltip: 'Edit Exercise',
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  padding: EdgeInsets.zero,
                 ),
+                
+                // Delete button
                 IconButton(
-                  icon: const Icon(Icons.delete, size: 20),
+                  icon: Icon(
+                    Icons.delete,
+                    size: 20,
+                    color: Colors.red.shade700,
+                  ),
                   onPressed: () => _confirmRemoveExercise(exercise, index),
                   tooltip: 'Remove Exercise',
+                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                  padding: EdgeInsets.zero,
                 ),
               ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon, 
+    required VoidCallback onPressed, 
+    required String tooltip,
+    bool isDestructive = false,
+  }) {
+    return IconButton(
+      icon: Icon(
+        icon, 
+        size: 20,
+        color: isDestructive 
+            ? Colors.red.shade700 
+            : neutralDark.withValues(alpha: 0.7),
+      ),
+      onPressed: onPressed,
+      tooltip: tooltip,
+      splashRadius: 20,
     );
   }
 
@@ -380,14 +571,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.grey.shade600,
+            color: neutralDark.withValues(alpha: 0.6),
             fontSize: 12,
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w500,
+            color: neutralDark,
           ),
         ),
       ],
@@ -405,7 +597,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       if (!doc.exists) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Exercise not found')),
+            SnackBar(
+              content: const Text('Exercise not found'),
+              backgroundColor: Colors.red.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
           );
         }
         return;
@@ -425,7 +625,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading exercise details: $error')),
+          SnackBar(
+            content: Text('Error loading exercise details: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -462,7 +670,18 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     String notes = exercise['notes'] ?? '';
 
     return AlertDialog(
-      title: const Text('Edit Exercise'),
+      title: Text(
+        'Edit Exercise',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: neutralDark,
+        ),
+      ),
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: neutralMid, width: 1),
+      ),
       content: Form(
         key: formKey,
         child: SingleChildScrollView(
@@ -472,9 +691,10 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               // Exercise name display
               Text(
                 exercise['exerciseName'] ?? 'Unknown Exercise',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  color: neutralDark,
                 ),
               ),
               const SizedBox(height: 16),
@@ -482,9 +702,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               // Sets
               TextFormField(
                 initialValue: sets.toString(),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Sets',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: primaryColor, width: 1.5),
+                  ),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -505,9 +732,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               // Reps
               TextFormField(
                 initialValue: reps,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Reps (e.g., "10" or "8-12")',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: primaryColor, width: 1.5),
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -524,9 +758,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               // Rest
               TextFormField(
                 initialValue: rest.toString(),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Rest (seconds)',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: primaryColor, width: 1.5),
+                  ),
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
@@ -553,9 +794,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                     flex: 2,
                     child: TextFormField(
                       initialValue: weight.toString(),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Weight',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: primaryColor, width: 1.5),
+                        ),
                       ),
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       validator: (value) {
@@ -578,9 +826,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                   Expanded(
                     flex: 1,
                     child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Unit',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: primaryColor, width: 1.5),
+                        ),
                       ),
                       value: weightUnit,
                       items: const [
@@ -604,9 +859,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               // Notes
               TextFormField(
                 initialValue: notes,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Notes (optional)',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: primaryColor, width: 1.5),
+                  ),
                 ),
                 maxLines: 3,
                 onSaved: (value) {
@@ -620,9 +882,12 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: primaryColor),
+          ),
         ),
-        TextButton(
+        ElevatedButton(
           onPressed: () {
             if (formKey.currentState!.validate()) {
               formKey.currentState!.save();
@@ -640,6 +905,14 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               _updateExercise(updatedExercise, index);
             }
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
           child: const Text('Save'),
         ),
       ],
@@ -665,13 +938,29 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exercise updated successfully')),
+          SnackBar(
+            content: const Text('Exercise updated successfully'),
+            backgroundColor: accentGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating exercise: $error')),
+          SnackBar(
+            content: Text('Error updating exercise: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -689,7 +978,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating exercise order: $error')),
+          SnackBar(
+            content: Text('Error updating exercise order: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
       // Revert to the previous state if there's an error
@@ -697,32 +994,55 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     }
   }
 
-  Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) async {
+  
+Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Remove Exercise'),
+          title: Text(
+            'Remove Exercise',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: neutralDark,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: neutralMid, width: 1),
+          ),
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Are you sure you want to remove "${exercise['exerciseName']}" from this workout plan?'),
+                Text(
+                  'Are you sure you want to remove "${exercise['exerciseName']}" from this workout plan?',
+                  style: TextStyle(color: neutralDark),
+                ),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: primaryColor),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: const Text(
-                'Remove',
-                style: TextStyle(color: Colors.red),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
+              child: const Text('Remove'),
               onPressed: () {
                 Navigator.of(context).pop();
                 _removeExercise(index);
@@ -753,13 +1073,29 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Exercise removed successfully')),
+          SnackBar(
+            content: const Text('Exercise removed successfully'),
+            backgroundColor: accentGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error removing exercise: $error')),
+          SnackBar(
+            content: Text('Error removing exercise: $error'),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     }
@@ -771,8 +1107,14 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     
     if (exercises.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Add exercises to your workout plan before starting'),
+        SnackBar(
+          content: const Text('Add exercises to your workout plan before starting'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          margin: const EdgeInsets.all(16),
         ),
       );
       return;
