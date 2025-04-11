@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'dart:developer';
 import 'package:fitness/services/authentication_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -53,11 +54,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeFormValues();
+    _initialiseFormValues();
   }
   
-  void _initializeFormValues() {
-    // Initialize form with user data
+  void _initialiseFormValues() {
+    // Initialise form with user data
     _nameController.text = widget.userData['displayName'] ?? '';
     
     final profile = widget.userData['profile'] as Map<String, dynamic>?;
@@ -111,7 +112,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       
       return await storageRef.getDownloadURL();
     } catch (e) {
-      print('Error uploading image: $e');
+      log('Error uploading image: $e', name: 'EditProfileScreen');
       return null;
     }
   }
@@ -170,247 +171,461 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Access theme properties
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
+        elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+              ),
+            )
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_errorMessage != null)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(color: Colors.red.shade900),
-                        ),
-                      ),
-                    
-                    // Profile image
-                    Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.blue.shade100,
-                            backgroundImage: _imageFile != null
-                                ? FileImage(_imageFile!)
-                                : (widget.userData['photoURL'] != null
-                                    ? NetworkImage(widget.userData['photoURL'])
-                                    : null),
-                            child: (_imageFile == null && widget.userData['photoURL'] == null)
-                                ? Text(
-                                    _getInitials(widget.userData['displayName'] ?? ''),
-                                    style: const TextStyle(
-                                      fontSize: 50,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.blue,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(Icons.edit, size: 20),
-                                color: Colors.white,
-                                onPressed: _pickImage,
-                              ),
-                            ),
-                          ),
+              child: Column(
+                children: [
+                  // Header
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          theme.primaryColor,
+                          theme.primaryColor.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Name
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your name';
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    const Divider(),
-                    
-                    // Personal Information Section
-                    const Text(
-                      'Personal Information',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Height
-                    TextFormField(
-                      controller: _heightController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Height (cm)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.height),
-                      ),
-                      validator: (value) {
-                        if (value != null && value.isNotEmpty) {
-                          final height = double.tryParse(value);
-                          if (height == null || height <= 0) {
-                            return 'Please enter a valid height';
-                          }
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Weight
-                    TextFormField(
-                      controller: _weightController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Weight (kg)',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.monitor_weight),
-                      ),
-                      validator: (value) {
-                        if (value != null && value.isNotEmpty) {
-                          final weight = double.tryParse(value);
-                          if (weight == null || weight <= 0) {
-                            return 'Please enter a valid weight';
-                          }
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Fitness Level
-                    const Text(
-                      'Fitness Level',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    Wrap(
-                      spacing: 8,
-                      children: _fitnessLevels.map((level) {
-                        return ChoiceChip(
-                          label: Text(level.capitalize()),
-                          selected: _selectedFitnessLevel == level,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() {
-                                _selectedFitnessLevel = level;
-                              });
-                            }
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Fitness Goals
-                    const Text(
-                      'Fitness Goals',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 8),
-                    
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _availableFitnessGoals.map((goal) {
-                        final isSelected = _selectedFitnessGoals.contains(goal);
-                        return FilterChip(
-                          label: Text(goal),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedFitnessGoals.add(goal);
-                              } else {
-                                _selectedFitnessGoals.remove(goal);
-                              }
-                            });
-                          },
-                          selectedColor: Colors.blue.shade100,
-                          checkmarkColor: Colors.blue.shade800,
-                        );
-                      }).toList(),
-                    ),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Save button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _saveProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    child: Column(
+                      children: [
+                        // Profile image with edit button
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 3,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: _imageFile != null
+                                      ? FileImage(_imageFile!)
+                                      : (widget.userData['photoURL'] != null
+                                          ? NetworkImage(widget.userData['photoURL'])
+                                          : null),
+                                  child: (_imageFile == null && widget.userData['photoURL'] == null)
+                                      ? Text(
+                                          _getInitials(widget.userData['displayName'] ?? ''),
+                                          style: TextStyle(
+                                            fontSize: 50,
+                                            fontWeight: FontWeight.bold,
+                                            color: theme.primaryColor,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  height: 40,
+                                  width: 40,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.secondary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.white,
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(Icons.camera_alt, size: 20),
+                                    color: Colors.white,
+                                    onPressed: _pickImage,
+                                    tooltip: 'Change photo',
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        // Caption text
+                        const Text(
+                          'Tap to change profile picture',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Form content
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_errorMessage != null)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.red.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red.shade700,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: TextStyle(color: Colors.red.shade700),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                          if (_errorMessage != null)
+                            const SizedBox(height: 20),
+                          
+                          // Name section
+                          _buildSectionHeader('Personal Details'),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Name field
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              labelText: 'Full Name',
+                              hintText: 'Enter your full name',
+                              prefixIcon: Icon(
+                                Icons.person_outline,
+                                color: theme.primaryColor,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: colorScheme.outline,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: theme.primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your name';
+                              }
+                              return null;
+                            },
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Body Measurements section
+                          _buildSectionHeader('Body Measurements'),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Height & Weight in a row
+                          Row(
+                            children: [
+                              // Height field
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _heightController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    labelText: 'Height',
+                                    hintText: 'cm',
+                                    prefixIcon: Icon(
+                                      Icons.height,
+                                      color: theme.primaryColor,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      final height = double.tryParse(value);
+                                      if (height == null || height <= 0) {
+                                        return 'Invalid height';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              
+                              const SizedBox(width: 16),
+                              
+                              // Weight field
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _weightController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    labelText: 'Weight',
+                                    hintText: 'kg',
+                                    prefixIcon: Icon(
+                                      Icons.monitor_weight_outlined,
+                                      color: colorScheme.tertiary,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value != null && value.isNotEmpty) {
+                                      final weight = double.tryParse(value);
+                                      if (weight == null || weight <= 0) {
+                                        return 'Invalid weight';
+                                      }
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Fitness Details section
+                          _buildSectionHeader('Fitness Details'),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Fitness Level section
+                          Text(
+                            'Fitness Level',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 12),
+                          
+                          // Fitness Level Chips
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 10,
+                            children: _fitnessLevels.map((level) {
+                              final isSelected = _selectedFitnessLevel == level;
+                              return FilterChip(
+                                label: Text(
+                                  level.capitalize(),
+                                  style: TextStyle(
+                                    color: isSelected 
+                                        ? theme.primaryColor 
+                                        : colorScheme.onSurface,
+                                    fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                                  ),
+                                ),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setState(() {
+                                      _selectedFitnessLevel = level;
+                                    });
+                                  }
+                                },
+                                backgroundColor: theme.cardColor,
+                                selectedColor: theme.primaryColor.withValues(alpha: 0.12),
+                                checkmarkColor: theme.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                  side: BorderSide(
+                                    color: isSelected 
+                                        ? theme.primaryColor 
+                                        : colorScheme.outline.withValues(alpha: 0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                              );
+                            }).toList(),
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Fitness Goals section
+                          Text(
+                            'Fitness Goals',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 12),
+                          
+                          // Fitness Goals Chips
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 10,
+                            children: _availableFitnessGoals.map((goal) {
+                              final isSelected = _selectedFitnessGoals.contains(goal);
+                              return FilterChip(
+                                label: Text(
+                                  goal,
+                                  style: TextStyle(
+                                    color: isSelected 
+                                        ? theme.primaryColor 
+                                        : colorScheme.onSurface,
+                                    fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                                  ),
+                                ),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedFitnessGoals.add(goal);
+                                    } else {
+                                      _selectedFitnessGoals.remove(goal);
+                                    }
+                                  });
+                                },
+                                backgroundColor: theme.cardColor,
+                                selectedColor: theme.primaryColor.withValues(alpha: 0.12),
+                                checkmarkColor: theme.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(50),
+                                  side: BorderSide(
+                                    color: isSelected 
+                                        ? theme.primaryColor 
+                                        : colorScheme.outline.withValues(alpha: 0.5),
+                                    width: 1,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                              );
+                            }).toList(),
+                          ),
+                          
+                          const SizedBox(height: 32),
+                          
+                          // Save button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: _saveProfile,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.primaryColor,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Save Changes',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 32),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+    );
+  }
+  
+  Widget _buildSectionHeader(String title) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Divider(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+            thickness: 1,
+          ),
+        ),
+      ],
     );
   }
   
@@ -428,7 +643,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 }
 
-// Extension for capitalizing strings
+// Extension for capitalising string - taken 
 extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${substring(1)}";
