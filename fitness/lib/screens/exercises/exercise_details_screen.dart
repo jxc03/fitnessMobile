@@ -588,7 +588,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(50), // Fully rounded corners
         border: Border.all(
-          color: color.withOpacity(0.3), // 30% opacity border
+          color: color.withValues(alpha: 0.3), // 30% opacity border
           width: 1,
         ),
       ),
@@ -949,7 +949,8 @@ class ExerciseDetailScreen extends StatelessWidget {
   
   /// Builds a single styled list item for instructions, tips, etc
   /// Creates a visually appealing card with a numbered indicator and
-  /// the instruction text
+  /// the instruction text.
+
   Widget _buildListItem(int index, String text) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
