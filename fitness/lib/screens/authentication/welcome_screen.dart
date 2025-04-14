@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../authentication/signup_screen.dart';
 import '../authentication/signin_screen.dart';
 
-
+// Creates the initial welcome screen for the app
+// User has the option to sign in or create an account
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
@@ -52,7 +53,7 @@ class WelcomeScreen extends StatelessWidget {
               Text(
                 'Your personal fitness journey starts here',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
@@ -96,7 +97,7 @@ class WelcomeScreen extends StatelessWidget {
                 child: Text(
                   'By continuing, you agree to our Terms of Service and Privacy Policy',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 12,
                   ),
                   textAlign: TextAlign.center,
@@ -119,7 +120,7 @@ class WelcomeScreen extends StatelessWidget {
     Color textColor,
     VoidCallback onPressed,
   ) {
-    return Container(
+    return SizedBox(
       width: MediaQuery.of(context).size.width * 0.8,
       height: 56,
       child: ElevatedButton.icon(
