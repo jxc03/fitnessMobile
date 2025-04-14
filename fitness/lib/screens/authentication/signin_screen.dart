@@ -45,7 +45,7 @@ class _SignInScreenState extends State<SignInScreen> {
   // Try to sign in with email and password
   try {
     // Attempt to sign in with provided email and password 
-    await _authService.signInWithEmailAndPassword(_emailController.text, _passwordController.text); // Call sign-in method from authentication service
+    await _authService.signInWithEmailAndPassword(_emailController.text, _passwordController.text); // Call sign in method from authentication service
 
     // Ensure the widget is still mounted before navigating
     if (mounted) { // Check if the widget is still mounted
@@ -78,7 +78,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     } catch (err) {
       setState(() {
-        _errorMessage = 'An error occurred. Please try again.'; // Set generic error message
+        _errorMessage = 'An error occurred. Please try again.'; // Generic error message
       });
       
     } finally { // Finally block to reset loading state

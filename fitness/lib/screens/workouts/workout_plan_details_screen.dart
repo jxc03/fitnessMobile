@@ -5,10 +5,20 @@ import 'add_exercise_screen.dart';
 import '../tracking/workout_tracking_screen.dart';
 import '../tracking/workout_history_screen.dart';
 import '../tracking/workout_progress_screen.dart';
-import 'dart:developer'; // For using the log method
-import 'dart:ui' show lerpDouble; // To drag exercises
+import 'dart:developer'; // For using the log method for debugging
+import 'dart:ui' show lerpDouble; // For gradient calculations when dragging exercises
 
+/// Displays detailed information about a specific workout plan
+/// This widget fetches the workout plan data from Firestore and allows users to:
+/// View all exercises in the workout plan
+/// Add new exercises to the plan
+/// Edit exercise parameters (sets, reps, rest time, weight)
+/// Reorder exercises by dragging them
+/// Remove exercises from the plan
+/// Start a workout session based on this plan
+/// View workout history and progress analytics
 class WorkoutPlanDetailScreen extends StatefulWidget {
+  /// The Firestore document ID of the workout plan to display
   final String planId;
 
   const WorkoutPlanDetailScreen({
@@ -21,25 +31,28 @@ class WorkoutPlanDetailScreen extends StatefulWidget {
 }
 
 class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
-  bool _isLoading = true;
-  Map<String, dynamic>? _workoutPlan;
-  String? _errorMessage;
+  bool _isLoading = true;                     
+  Map<String, dynamic>? _workoutPlan;         
+  String? _errorMessage;                      
 
   // App colour palette
-  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
-  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
-  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
-  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
-  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
-  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
-  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue 
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue 
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green 
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal 
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate 
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray 
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray 
 
   @override
   void initState() {
     super.initState();
-    _fetchWorkoutPlanDetails();
+    _fetchWorkoutPlanDetails(); // Fetch workout plan data when the screen initialises
   }
 
+  /// Fetches the workout plan details from Firestore
+  /// Retrieves the complete workout plan document based on the planId
+  /// provided to the widget and updates the state accordingly
   Future<void> _fetchWorkoutPlanDetails() async {
     setState(() {
       _isLoading = true;
@@ -47,11 +60,13 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     });
 
     try {
+      // Query the specific workout plan document from Firestore
       final DocumentSnapshot doc = await FirebaseFirestore.instance
           .collection('WorkoutPlans')
           .doc(widget.planId)
           .get();
 
+      // Handle case where document doesn't exist
       if (!doc.exists) {
         setState(() {
           _errorMessage = 'Workout plan not found';
@@ -60,6 +75,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         return;
       }
 
+      // Process the document data and update state
       final data = doc.data() as Map<String, dynamic>;
       setState(() {
         _workoutPlan = {
@@ -73,6 +89,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         _isLoading = false;
       });
     } catch (error) {
+      // Handle any errors during fetch operation
       setState(() {
         _errorMessage = 'Failed to load workout plan details: $error';
         _isLoading = false;
@@ -101,8 +118,9 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          // Only show action buttons when data is loaded
           if (!_isLoading && _workoutPlan != null) ... [
-            // Analytics button
+            // Analytics/insights button with bottom sheet options
             IconButton(
               icon: const Icon(Icons.insights),
               tooltip: 'View Analytics',
@@ -118,6 +136,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Workout history option
                           ListTile(
                             leading: Icon(Icons.history, color: primaryColor),
                             title: const Text('Workout History'),
@@ -133,6 +152,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                             },
                           ),
                           Divider(color: neutralMid),
+                          // Progress analytics option
                           ListTile(
                             leading: Icon(Icons.show_chart, color: primaryColor),
                             title: const Text('Progress Analytics'),
@@ -163,7 +183,8 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           ]
         ],
       ),
-      body: _buildBody(),
+      body: _buildBody(), // Main content area with conditional rendering
+      // Only show FAB when workout plan is loaded
       floatingActionButton: !_isLoading && _workoutPlan != null 
         ? FloatingActionButton.extended(
             onPressed: () => _navigateToAddExercise(),
@@ -182,8 +203,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  /// Builds the main body content based on the current state
+  /// This method conditionally renders:
+  /// A loading indicator when data is being fetched
+  /// An error message if the fetch operation failed
+  /// A "not found" message if the workout plan doesn't exist
+  /// The complete workout plan details with exercises if data is available
   Widget _buildBody() {
     if (_isLoading) {
+      // Show loading indicator while fetching data
       return Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
@@ -192,6 +220,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     }
 
     if (_errorMessage != null) {
+      // Show error message if fetch operation failed
       return Center(
         child: Text(
           _errorMessage!,
@@ -201,6 +230,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     }
 
     if (_workoutPlan == null) {
+      // Show message if workout plan not found
       return Center(
         child: Text(
           'Workout plan not found',
@@ -209,12 +239,14 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       );
     }
 
+    // Extract the exercises list from the workout plan
     final exercises = _workoutPlan!['exercises'] as List;
 
+    // Build the complete workout plan details UI
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Workout Plan Info Section
+        // Workout Plan Info Section with description and exercise count
         Container(
           width: double.infinity,
           color: Colors.white,
@@ -222,15 +254,17 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Show description if available
               if (_workoutPlan!['description'] != null && _workoutPlan!['description'].isNotEmpty)
                 Text(
                   _workoutPlan!['description'],
                   style: TextStyle(
                     fontSize: 16,
-                    color: neutralDark.withValues(alpha: 0.8),
+                    color: neutralDark.withValues(alpha: 0.8), // 80% opacity
                   ),
                 ),
               const SizedBox(height: 8),
+              // Exercise count indicator with proper pluralisation
               _buildInfoBox(
                 icon: Icons.fitness_center, 
                 text: '${exercises.length} exercise${exercises.length != 1 ? 's' : ''}',
@@ -240,16 +274,18 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           ),
         ),
 
-        // Exercises Section
+        // Exercises List Section - takes remaining screen space
         Expanded(
           child: exercises.isEmpty
-              ? _buildEmptyExercisesState()
-              : _buildExercisesList(exercises),
+              ? _buildEmptyExercisesState() // Empty state if no exercises
+              : _buildExercisesList(exercises), // List of exercises if available
         ),
       ],
     );
   }
 
+  /// Builds a styled information box with icon and text
+  /// Used to display metadata about the workout plan like the number of exercises.
   Widget _buildInfoBox({
     required IconData icon,
     required String text,
@@ -258,10 +294,10 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.12), // 12% opacity background
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: color.withValues(alpha: 0.3),
+          color: color.withValues(alpha: 0.3), // 30% opacity border
           width: 1,
         ),
       ),
@@ -271,13 +307,13 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           Icon(
             icon,
             size: 16,
-            color: color.withValues(alpha: 0.9),
+            color: color.withValues(alpha: 0.9), // 90% opacity icon
           ),
           const SizedBox(width: 6),
           Text(
             text,
             style: TextStyle(
-              color: color.withValues(alpha: 0.9),
+              color: color.withValues(alpha: 0.9), // 90% opacity text
               fontWeight: FontWeight.w500,
               fontSize: 13,
             ),
@@ -287,17 +323,21 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  /// Builds the empty state UI when no exercises exist in the plan
+  /// Displays a placeholder with instructions and a button to add the first exercise to the workout plan.
   Widget _buildEmptyExercisesState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Exercise icon
           Icon(
             Icons.fitness_center,
             size: 80,
-            color: neutralDark.withValues(alpha: 0.3),
+            color: neutralDark.withValues(alpha: 0.3), // 30% opacity
           ),
           const SizedBox(height: 16),
+          // Empty state title
           Text(
             'No Exercises Yet',
             style: TextStyle(
@@ -307,14 +347,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
             ),
           ),
           const SizedBox(height: 8),
+          // Empty state description
           Text(
             'Add exercises to your workout plan',
             style: TextStyle(
-              color: neutralDark.withValues(alpha: 0.7),
+              color: neutralDark.withValues(alpha: 0.7), // 70% opacity
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 24),
+          // Add exercise button
           ElevatedButton.icon(
             onPressed: () => _navigateToAddExercise(),
             icon: const Icon(Icons.add),
@@ -341,6 +383,8 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  /// Builds a reorderable list of exercises in the workout plan
+  /// This widget supports drag-and-drop reordering of exercises with custom styling for the drag feedback.
   Widget _buildExercisesList(List exercises) {
     return Theme(
       // Override the default selection color/behavior when dragging
@@ -351,16 +395,19 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       child: ReorderableListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: exercises.length,
-        buildDefaultDragHandles: false, // Disables the default drag handles
+        buildDefaultDragHandles: false, // Disables the default drag handles for custom behavior
         onReorder: (oldIndex, newIndex) {
+          // Handle the reordering of exercises
           setState(() {
+            // Adjust the newIndex to account for the item removal
             if (oldIndex < newIndex) {
               newIndex -= 1;
             }
+            // Remove the item from the old position and insert at the new position
             final item = exercises.removeAt(oldIndex);
             exercises.insert(newIndex, item);
 
-            // Update the order field for each exercise
+            // Update the order field for each exercise to maintain correct order
             for (int i = 0; i < exercises.length; i++) {
               exercises[i]['order'] = i;
             }
@@ -369,16 +416,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
             _updateExercisesOrder(exercises);
           });
         },
-        // Custom drag feedback to make the dragging experience cleaner
+        // Custom drag feedback animation for a better user experience
         proxyDecorator: (Widget child, int index, Animation<double> animation) {
           return AnimatedBuilder(
             animation: animation,
             builder: (BuildContext context, Widget? child) {
               return Material(
-                elevation: 4.0 * animation.value,
+                elevation: 4.0 * animation.value, // Gradually increase elevation during drag
                 borderRadius: BorderRadius.circular(12),
                 color: Colors.transparent,
-                shadowColor: Colors.black.withValues(alpha: 0.1),
+                shadowColor: Colors.black.withValues(alpha: 0.1), // 10% opacity shadow
                 child: child,
               );
             },
@@ -387,9 +434,9 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         },
         itemBuilder: (context, index) {
           final exercise = exercises[index];
-          // Make the entire card draggable
+          // Make the entire card draggable using ReorderableDragStartListener
           return ReorderableDragStartListener(
-            key: ValueKey(exercise['exerciseId'] ?? index),
+            key: ValueKey(exercise['exerciseId'] ?? index), // Unique key for each exercise
             index: index,
             child: _buildExerciseCard(exercise, index),
           );
@@ -398,7 +445,12 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
   
-
+  /// Builds a card for displaying a single exercise in the workout plan
+  /// Each card shows:
+  /// Exercise name
+  /// Training parameters (sets, reps, rest time, weight)
+  /// Optional notes
+  /// Buttons for viewing details, editing, and deleting
   Widget _buildExerciseCard(Map<String, dynamic> exercise, int index) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -413,20 +465,20 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Exercise number indicator
+            // Exercise number indicator with gradient background
             Container(
               width: 32,
               height: 32,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [secondaryColor, primaryColor],
+                  colors: [secondaryColor, primaryColor], // Gradient from secondary to primary
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: primaryColor.withValues(alpha: 0.2),
+                    color: primaryColor.withValues(alpha: 0.2), // 20% opacity shadow
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -434,7 +486,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
               child: Center(
                 child: Text(
-                  '${index + 1}',
+                  '${index + 1}', // 1 - based numbering for display
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -445,11 +497,12 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
             ),
             const SizedBox(width: 16),
             
-            // Exercise details
+            // Exercise details (name, sets, reps, etc.)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Exercise name
                   Text(
                     exercise['exerciseName'] ?? 'Unknown Exercise',
                     style: const TextStyle(
@@ -460,7 +513,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                   ),
                   const SizedBox(height: 10),
                   
-                  // Exercise parameters
+                  // Exercise parameters (sets, reps, rest, weight) in a wrap layout
                   Wrap(
                     spacing: 20,
                     runSpacing: 12,
@@ -469,7 +522,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                       _buildExerciseDetail('Reps', exercise['reps'] ?? '10-12'),
                       _buildExerciseDetail('Rest', '${exercise['rest'] ?? 60}s'),
                     
-                      // Show weight if its greater than 0
+                      // Show weight only if it's greater than 0
                       if ((exercise['weight'] ?? 0) > 0)
                         _buildExerciseDetail(
                           'Weight', 
@@ -478,7 +531,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                     ],
                   ),
                   
-                  // Notes, if any
+                  // Optional notes for the exercise
                   if (exercise['notes'] != null && exercise['notes'].isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -486,7 +539,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                         'Note: ${exercise['notes']}',
                         style: TextStyle(
                           fontStyle: FontStyle.italic,
-                          color: neutralDark.withValues(alpha: 0.7),
+                          color: neutralDark.withValues(alpha: 0.7), // 70% opacity
                           fontSize: 14,
                         ),
                       ),
@@ -495,15 +548,15 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
             ),
             
-            // Action buttons column
+            // Action buttons column (view details, edit, delete)
             Column(
               children: [
-                // Info button
+                // Info/details button
                 IconButton(
                   icon: Icon(
                     Icons.info_outline,
                     size: 20,
-                    color: neutralDark.withValues(alpha: 0.7),
+                    color: neutralDark.withValues(alpha: 0.7), // 70% opacity
                   ),
                   onPressed: () => _navigateToExerciseDetails(exercise['exerciseId']),
                   tooltip: 'View Exercise Details',
@@ -516,7 +569,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                   icon: Icon(
                     Icons.edit,
                     size: 20,
-                    color: neutralDark.withValues(alpha: 0.7),
+                    color: neutralDark.withValues(alpha: 0.7), // 70% opacity
                   ),
                   onPressed: () => _editExercise(exercise, index),
                   tooltip: 'Edit Exercise',
@@ -544,6 +597,9 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  /// Builds a reusable action button with icon and tooltip
+  /// Note: This method is not currently used in the widget but
+  /// provides a template for consistent action buttons.
   Widget _buildActionButton({
     required IconData icon, 
     required VoidCallback onPressed, 
@@ -556,7 +612,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         size: 20,
         color: isDestructive 
             ? Colors.red.shade700 
-            : neutralDark.withValues(alpha: 0.7),
+            : neutralDark.withValues(alpha: 0.7), // 70% opacity for non-destructive actions
       ),
       onPressed: onPressed,
       tooltip: tooltip,
@@ -564,17 +620,22 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  /// Builds a labeled detail for exercise parameters
+  /// This widget displays a parameter label and its value,
+  /// used for showing sets, reps, rest time, and weight.
   Widget _buildExerciseDetail(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Parameter label (e.g., "Sets", "Reps")
         Text(
           label,
           style: TextStyle(
-            color: neutralDark.withValues(alpha: 0.6),
+            color: neutralDark.withValues(alpha: 0.6), // 60% opacity
             fontSize: 12,
           ),
         ),
+        // Parameter value (e.g., "3", "10-12")
         Text(
           value,
           style: TextStyle(
@@ -586,14 +647,18 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  /// Navigates to the exercise details screen for a specific exercise
+  /// Fetches the full exercise data from Firestore before navigation,
+  /// as the workout plan only contains a subset of exercise properties
   void _navigateToExerciseDetails(String exerciseId) async {
     try {
-      // Fetch the full exercise data
+      // Fetch the complete exercise data from Firestore
       final doc = await FirebaseFirestore.instance
           .collection('Exercises')
           .doc(exerciseId)
           .get();
       
+      // Handle case where exercise document doesn't exist
       if (!doc.exists) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -611,6 +676,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         return;
       }
       
+      // Process exercise data and navigate to details screen
       final exerciseData = doc.data() as Map<String, dynamic>;
       exerciseData['id'] = doc.id;
       
@@ -623,6 +689,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         );
       }
     } catch (error) {
+      // Handle errors during fetch operation
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -639,6 +706,9 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     }
   }
 
+  /// Navigates to the add exercise screen for this workout plan
+  /// After returning from the screen, refreshes the workout plan details
+  /// if an exercise was added (result == true)
   void _navigateToAddExercise() async {
     final result = await Navigator.push(
       context,
@@ -647,21 +717,28 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
       ),
     );
     
+    // Refresh the workout plan details if an exercise was added
     if (result == true) {
       _fetchWorkoutPlanDetails();
     }
   }
 
+  /// Opens a dialog to edit the parameters of an exercise
+  /// Shows a form with fields for sets, reps, rest time, weight,
+  /// weight unit and notes
   void _editExercise(Map<String, dynamic> exercise, int index) {
-    // Show dialog to edit exercise details
+    // Show dialog with form to edit exercise parameters
     showDialog(
       context: context,
       builder: (context) => _buildEditExerciseDialog(exercise, index),
     );
   }
 
+  /// Builds the dialog for editing exercise parameters
+  /// Creates a form with validators and default values based on the current exercise parameters.
   Widget _buildEditExerciseDialog(Map<String, dynamic> exercise, int index) {
     final formKey = GlobalKey<FormState>();
+    // Initialize form values with current exercise parameters
     int sets = exercise['sets'] ?? 3;
     String reps = exercise['reps'] ?? '10-12';
     int rest = exercise['rest'] ?? 60;
@@ -688,7 +765,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Exercise name display
+              // Exercise name (non-editable)
               Text(
                 exercise['exerciseName'] ?? 'Unknown Exercise',
                 style: TextStyle(
@@ -699,7 +776,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Sets
+              // Sets input field
               TextFormField(
                 initialValue: sets.toString(),
                 decoration: InputDecoration(
@@ -729,7 +806,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Reps
+              // Reps input field (can be a range like "8-12")
               TextFormField(
                 initialValue: reps,
                 decoration: InputDecoration(
@@ -755,7 +832,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Rest
+              // Rest time input field (in seconds)
               TextFormField(
                 initialValue: rest.toString(),
                 decoration: InputDecoration(
@@ -785,7 +862,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Weight and unit
+              // Weight and unit input fields (side by side)
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -822,7 +899,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                   ),
                   const SizedBox(width: 8),
 
-                  // Weight unit selector
+                  // Weight unit selector (kg/lb)
                   Expanded(
                     flex: 1,
                     child: DropdownButtonFormField<String>(
@@ -856,7 +933,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Notes
+              // Notes input field (multi-line, optional)
               TextFormField(
                 initialValue: notes,
                 decoration: InputDecoration(
@@ -870,7 +947,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
                     borderSide: BorderSide(color: primaryColor, width: 1.5),
                   ),
                 ),
-                maxLines: 3,
+                maxLines: 3, // Allow multiple lines for notes
                 onSaved: (value) {
                   notes = value ?? '';
                 },
@@ -880,6 +957,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         ),
       ),
       actions: [
+        // Cancel button
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
@@ -887,13 +965,14 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
             style: TextStyle(color: primaryColor),
           ),
         ),
+        // Save button
         ElevatedButton(
           onPressed: () {
             if (formKey.currentState!.validate()) {
               formKey.currentState!.save();
               Navigator.of(context).pop();
               
-              // Update the exercise
+              // Create updated exercise with new parameters
               final updatedExercise = Map<String, dynamic>.from(exercise);
               updatedExercise['sets'] = sets;
               updatedExercise['reps'] = reps;
@@ -902,6 +981,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
               updatedExercise['weightUnit'] = weightUnit;
               updatedExercise['notes'] = notes;
               
+              // Update the exercise in Firestore
               _updateExercise(updatedExercise, index);
             }
           },
@@ -919,11 +999,16 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     );
   }
 
+  /// Updates an exercise in the workout plan
+  /// Saves the updated exercise parameters to Firestore and updates the local state to reflect the changes.
   Future<void> _updateExercise(Map<String, dynamic> updatedExercise, int index) async {
     try {
+      // Create a copy of the exercises list
       final exercises = List.from(_workoutPlan!['exercises'] as List);
+      // Replace the exercise at the specified index
       exercises[index] = updatedExercise;
       
+      // Update the Firestore document
       await FirebaseFirestore.instance
           .collection('WorkoutPlans')
           .doc(widget.planId)
@@ -932,10 +1017,12 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
+      // Update the local state
       setState(() {
         _workoutPlan!['exercises'] = exercises;
       });
       
+      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -950,6 +1037,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         );
       }
     } catch (error) {
+      // Show error message if update fails
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -966,8 +1054,11 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
     }
   }
 
+  /// Updates the order of exercises in the workout plan
+  /// Saves the reordered exercises list to Firestore after  a drag-and-drop operation.
   Future<void> _updateExercisesOrder(List exercises) async {
     try {
+      // Update the Firestore document with the new exercise order
       await FirebaseFirestore.instance
           .collection('WorkoutPlans')
           .doc(widget.planId)
@@ -976,6 +1067,7 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (error) {
+      // Show error message if update fails
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -995,10 +1087,12 @@ class _WorkoutPlanDetailScreenState extends State<WorkoutPlanDetailScreen> {
   }
 
   
-Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) async {
+  /// Shows a confirmation dialog before removing an exercise from the plan
+  /// Displays the exercise name and provides options to cancel or confirm the removal.
+  Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // User must tap a button to dismiss
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
@@ -1024,6 +1118,7 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
             ),
           ),
           actions: <Widget>[
+            // Cancel button
             TextButton(
               child: Text(
                 'Cancel',
@@ -1033,6 +1128,7 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
                 Navigator.of(context).pop();
               },
             ),
+            // Remove button
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -1054,11 +1150,17 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
     );
   }
 
+  /// Removes an exercise from the workout plan
+  /// Deletes the exercise at the specified index from the Firestore document
+  /// and updates the local state to reflect the change.
   Future<void> _removeExercise(int index) async {
     try {
+      // Create a copy of the exercises list
       final exercises = List.from(_workoutPlan!['exercises'] as List);
+      // Remove the exercise at the specified index
       exercises.removeAt(index);
       
+      // Update the Firestore document
       await FirebaseFirestore.instance
           .collection('WorkoutPlans')
           .doc(widget.planId)
@@ -1067,10 +1169,12 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
         'updatedAt': FieldValue.serverTimestamp(),
       });
       
+      // Update the local state
       setState(() {
         _workoutPlan!['exercises'] = exercises;
       });
       
+      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1085,6 +1189,7 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
         );
       }
     } catch (error) {
+      // Show error message if removal fails
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1101,11 +1206,16 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
     }
   }
 
+  /// Starts a workout session based on this workout plan
+  /// Navigates to the workout tracking screen if the plan has exercises,
+  /// otherwise shows an error message.
   void _startWorkout() async {
     if (_workoutPlan == null) return;
     final exercises = _workoutPlan!['exercises'] as List;
     
+    // Check if the workout plan has exercises
     if (exercises.isEmpty) {
+      // Show error message if no exercises in plan
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Add exercises to your workout plan before starting'),
@@ -1120,6 +1230,7 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
       return;
     }
     
+    // Navigate to the workout tracking screen
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -1130,8 +1241,9 @@ Future<void> _confirmRemoveExercise(Map<String, dynamic> exercise, int index) as
       ),
     );
   
+    // Refresh the workout plan details if workout was completed
     if (result == true) {
-      _fetchWorkoutPlanDetails(); // Refresh workout plan details after workout completion
+      _fetchWorkoutPlanDetails();
     }
   }
 }

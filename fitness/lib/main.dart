@@ -34,13 +34,13 @@ class AppColors {
   AppColors._();
   
   // Colour palette for the whole app
-  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
-  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
-  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
-  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
-  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
-  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
-  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+  static const Color primaryColor = Color(0xFF2A6F97); 
+  static const Color secondaryColor = Color(0xFF61A0AF); 
+  static const Color accentGreen = Color(0xFF4C956C); 
+  static const Color accentTeal = Color(0xFF2F6D80); 
+  static const Color neutralDark = Color(0xFF3D5A6C); 
+  static const Color neutralLight = Color(0xFFF5F7FA); 
+  static const Color neutralMid = Color(0xFFE1E7ED); 
 }
 
 class MainApp extends StatelessWidget {

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; 
 import 'package:fl_chart/fl_chart.dart'; // Charts for progress visualisation
 import 'package:firebase_auth/firebase_auth.dart'; // Authentication for users
+import 'dart:developer'; // For logging errors
 
 class WorkoutProgressScreen extends StatefulWidget {
   const WorkoutProgressScreen({super.key});
@@ -192,7 +193,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
         _errorMessage = 'Failed to load exercise progress: $error';
         _isLoading = false;
       });
-      print('Error fetching exercise progress: $error');
+      log('Error fetching exercise progress: $error');
     }
   }
 
@@ -374,7 +375,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
                       Expanded(
                         child: _buildStatCard(
                           'Current Reps', 
-                          '${latestReps.toStringAsFixed(1)}',
+                          latestReps.toStringAsFixed(1),
                           Icons.repeat,
                         ),
                       ),
@@ -504,7 +505,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
 
   Widget _buildWeightChart(List<Map<String, dynamic>> data) {
     // Format dates for X-axis
-    final dateFormat = DateFormat('MM/dd');
+    final dateFormat = DateFormat('dd/MM');
     
     // Prepare line chart data
     final spots = data.asMap().entries.map((entry) {
@@ -603,7 +604,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
             dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.blue.withOpacity(0.2),
+              color: Colors.blue.withValues(alpha: 0.2),
             ),
           ),
         ],
@@ -613,7 +614,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
 
   Widget _buildRepsChart(List<Map<String, dynamic>> data) {
     // Format dates for X-axis
-    final dateFormat = DateFormat('MM/dd');
+    final dateFormat = DateFormat('dd/MM');
     
     // Prepare line chart data
     final spots = data.asMap().entries.map((entry) {
@@ -712,7 +713,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
             dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.green.withOpacity(0.2),
+              color: Colors.green.withValues(alpha: 0.2),
             ),
           ),
         ],
@@ -722,7 +723,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
 
   Widget _buildRatingChart(List<Map<String, dynamic>> data) {
     // Format dates for X-axis
-    final dateFormat = DateFormat('MM/dd');
+    final dateFormat = DateFormat('dd/MM');
     
     // Prepare line chart data
     final spots = data.asMap().entries.map((entry) {
@@ -814,7 +815,7 @@ class _WorkoutProgressScreenState extends State<WorkoutProgressScreen> {
             dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: Colors.orange.withOpacity(0.2),
+              color: Colors.orange.withValues(alpha: 0.2),
             ),
           ),
         ],

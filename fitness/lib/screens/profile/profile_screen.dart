@@ -7,6 +7,14 @@ import 'change_password_screen.dart';
 import '../authentication/welcome_screen.dart';
 import 'dart:developer';
 
+/// Displays the user's profile information and settings
+/// This widget fetches user data from Firestore and allows users to:
+/// View their profile information (name, email, fitness stats)
+/// Edit their profile information
+/// Manage app settings (notifications, unit system)
+/// Change their password
+/// Delete their account
+/// Sign out from the application
 class ProfileScreen extends StatefulWidget {
   final Function(int)? onNavigate;
   
@@ -24,36 +32,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _loadUserData(); // Load user data when the screen initialises
   }
   
+  /// Fetches the current user's data from Firestore
+  /// This method retrieves the user document from the 'users' collection
+  /// based on the current authenticated user's ID and updates the state
+  /// with the fetched data
   Future<void> _loadUserData() async {
     setState(() {
       _isLoading = true;
     });
     
     try {
+      // Get the current authenticated user
       final user = _authService.currentUser;
       
       if (user != null) {
+        // Fetch the user document from Firestore
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         
         if (doc.exists) {
+          // Update state with the user data if document exists
           setState(() {
             _userData = doc.data();
             _isLoading = false;
           });
         } else {
+          // User document doesn't exist in Firestore
           setState(() {
             _isLoading = false;
           });
         }
       } else {
+        // No authenticated user
         setState(() {
           _isLoading = false;
         });
       }
     } catch (e) {
+      // Log errors for debugging
       log('Error loading user data: $e', name: 'ProfileScreen');
       setState(() {
         _isLoading = false;
@@ -61,7 +79,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
   
+  /// Shows a confirmation dialog and signs out the user if confirmed
+  /// This method displays a dialog asking the user to confirm their intention
+  /// to sign out. If confirmed, it signs out the user and navigates to the
+  /// welcome screen
   Future<void> _signOut() async {
+    // Show confirmation dialog
     final shouldSignOut = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -79,6 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         backgroundColor: Colors.white,
         actions: [
+          // Cancel button
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
@@ -88,6 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+          // Sign out button
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
@@ -102,18 +127,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    ) ?? false;
+    ) ?? false; // Default to false if dialog is dismissed
     
+    // Proceed with sign out if confirmed
     if (shouldSignOut) {
       try {
         await _authService.signOut();
         if (mounted) {
+          // Navigate to welcome screen and remove all previous routes
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-            (route) => false,
+            (route) => false, // Remove all previous routes
           );
         }
       } catch (e) {
+        // Show error message if sign out fails
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -131,9 +159,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
   
+  /// Shows a confirmation dialog and deletes the user's account if confirmed
+  /// This method displays a dialog asking the user to confirm their intention
+  /// to delete their account by entering their password. If confirmed and the
+  /// password is correct, it deletes the account and navigates to the welcome screen
   Future<void> _deleteAccount() async {
     final TextEditingController passwordController = TextEditingController();
     
+    // Show confirmation dialog with password verification
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -153,16 +186,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Warning message
             const Text(
               'This action cannot be undone. All your data will be permanently deleted.',
               style: TextStyle(color: Colors.red),
             ),
             const SizedBox(height: 16),
+            // Password verification
             const Text('Please enter your password to confirm:'),
             const SizedBox(height: 8),
             TextField(
               controller: passwordController,
-              obscureText: true,
+              obscureText: true, // Hide password text
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -181,6 +216,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
         actions: [
+          // Cancel button
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
@@ -190,6 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+          // Delete button
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(
@@ -204,23 +241,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    ) ?? false;
+    ) ?? false; // Default to false if dialog is dismissed
     
+    // Proceed with account deletion if confirmed
     if (shouldDelete) {
       try {
+        // Attempt to delete the account with the provided password
         await _authService.deleteAccount(passwordController.text);
         if (mounted) {
+          // Navigate to welcome screen and remove all previous routes
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const WelcomeScreen()),
-            (route) => false,
+            (route) => false, // Remove all previous routes
           );
         }
       } on FirebaseAuthException catch (e) {
+        // Handle specific Firebase Auth errors
         String message = 'An error occurred';
         if (e.code == 'wrong-password') {
           message = 'Incorrect password';
         }
         
+        // Show error message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -235,6 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
       } catch (e) {
+        // Handle generic errors
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -251,12 +294,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
     
+    // Clean up the controller to prevent memory leaks
     passwordController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Access theme properties
+    // Access theme properties for consistent styling
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
@@ -265,6 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
+          // Sign out button in app bar
           IconButton(
             icon: const Icon(Icons.exit_to_app),
             onPressed: _signOut,
@@ -285,22 +330,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: TextStyle(color: colorScheme.onSurface),
                   ),
                 )
-              : _buildProfileContent(context),
+              : _buildProfileContent(context), // Main profile content when data is loaded
     );
   }
   
+  /// Builds the main profile content with all sections
+  /// This method creates a scrollable list view containing:
+  /// Profile header with user image and name
+  /// Stats summary
+  /// Personal information section
+  /// Fitness goals section
+  /// Settings section
+  /// Danger zone section for account deletion
   Widget _buildProfileContent(BuildContext context) {
-    // Access theme properties
+    // Access theme properties for consistent styling
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
+    // Extract profile and settings data from user data
     final profile = _userData!['profile'] as Map<String, dynamic>?;
     final settings = _userData!['settings'] as Map<String, dynamic>?;
     
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        // Profile header
+        // Profile header with gradient background
         Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -308,7 +362,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               end: Alignment.bottomCenter,
               colors: [
                 theme.primaryColor,
-                theme.primaryColor.withValues(alpha: 0.8),
+                theme.primaryColor.withValues(alpha: 0.8), // 80% opacity
               ],
             ),
           ),
@@ -318,7 +372,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.only(top: 12, bottom: 24, left: 24, right: 24),
               child: Column(
                 children: [
-                  // Profile image
+                  // Profile image or initials
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
@@ -328,7 +382,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withValues(alpha: 0.1), // 10% opacity shadow
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -355,7 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   
                   const SizedBox(height: 16),
                   
-                  // Name
+                  // Display name
                   Text(
                     _userData!['displayName'] ?? 'User',
                     style: const TextStyle(
@@ -365,7 +419,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   
-                  // Email
+                  // Email address
                   Text(
                     _userData!['email'] ?? '',
                     style: const TextStyle(
@@ -386,6 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       );
                       
+                      // Refresh user data if profile was updated
                       if (result == true) {
                         _loadUserData();
                       }
@@ -408,7 +463,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         
-        // Stats summary
+        // Stats summary card (workouts, streak, completion)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Card(
@@ -443,18 +498,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Column(
             children: [
+              // Fitness level info item
               _buildInfoItem(
                 context,
                 'Fitness Level',
                 profile?['fitnessLevel']  != null
-                ? (profile!['fitnessLevel'] as String).capitalize()
+                ? (profile!['fitnessLevel'] as String).capitalize() // Capitalize first letter
                 : 'Not set',
                 Icons.fitness_center,
                 colorScheme.secondary,
               ),
               
-              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1),
+              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1), // 50% opacity divider
               
+              // Height info item
               _buildInfoItem(
                 context,
                 'Height',
@@ -463,8 +520,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 theme.primaryColor,
               ),
               
-              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1),
+              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1), // 50% opacity divider
               
+              // Weight info item
               _buildInfoItem(
                 context,
                 'Weight',
@@ -492,6 +550,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: (profile['fitnessGoals'] as List).map((goal) {
+                      // Create a chip for each fitness goal
                       return Chip(
                         label: Text(
                           goal.toString(),
@@ -500,9 +559,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
+                        backgroundColor: theme.primaryColor.withValues(alpha: 0.1), // 10% opacity background
                         side: BorderSide(
-                          color: theme.primaryColor.withValues(alpha: 0.3),
+                          color: theme.primaryColor.withValues(alpha: 0.3), // 30% opacity border
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
@@ -515,7 +574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 : Text(
                     'No fitness goals set',
                     style: TextStyle(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7), // 70% opacity text
                     ),
                   ),
           ),
@@ -532,6 +591,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Column(
             children: [
+              // Notifications toggle
               SwitchListTile(
                 title: Text(
                   'Notifications',
@@ -544,13 +604,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   'Receive workout reminders and updates',
                   style: TextStyle(fontSize: 13),
                 ),
-                value: settings?['notifications'] ?? false,
+                value: settings?['notifications'] ?? false, // Default to false if not set
                 onChanged: (value) async {
                   final scaffoldMessenger = ScaffoldMessenger.of(context);
                   try {
+                    // Update notification setting in Firestore
                     await _authService.updateUserSettings({'notifications': value});
-                    _loadUserData();
+                    _loadUserData(); // Refresh user data
                   } catch (e) {
+                    // Show error message if update fails
                     if (mounted) {
                       scaffoldMessenger.showSnackBar(
                         SnackBar(
@@ -565,8 +627,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
               
-              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1),
+              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1), // 50% opacity divider
               
+              // Unit system selector
               ListTile(
                 title: Text(
                   'Units',
@@ -580,13 +643,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ? 'Imperial (lb, ft)' 
                       : 'Metric (kg, cm)',
                   style: TextStyle(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7), // 70% opacity
                     fontSize: 13,
                   ),
                 ),
                 trailing: Icon(
                   Icons.chevron_right, 
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7), // 70% opacity
                 ),
                 onTap: () {
                   _showUnitSystemPicker(context);
@@ -598,8 +661,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               ),
               
-              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1),
+              Divider(color: colorScheme.outline.withValues(alpha: 0.5), height: 1), // 50% opacity divider
               
+              // Change password option
               ListTile(
                 title: Text(
                   'Change Password',
@@ -618,7 +682,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 trailing: Icon(
                   Icons.chevron_right, 
-                  color: colorScheme.onSurface.withOpacity(0.7),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7), // 70% opacity
                 ),
                 onTap: () {
                   Navigator.push(
@@ -634,7 +698,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         
-        // Danger zone
+        // Danger zone section with red styling
         _buildSectionHeader(context, 'Danger Zone', color: Colors.red.shade700),
         
         Card(
@@ -644,7 +708,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(color: Colors.red.shade200, width: 1),
           ),
-          color: Colors.red.shade50,
+          color: Colors.red.shade50, // Light red background for warning
           child: ListTile(
             title: const Text(
               'Delete Account',
@@ -669,11 +733,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         
-        const SizedBox(height: 32),
+        const SizedBox(height: 32), // Bottom padding
       ],
     );
   }
-  
+  /// Sction header with an optional custom colour
+  /// Creates a header with a title and a divider line for visually
+  /// separating different sections of the profile screen
   Widget _buildSectionHeader(BuildContext context, String title, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 12),
@@ -699,6 +765,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
   
+  /// Builds an information item with an icon, label, and value
+  /// Used for displaying personal information items like fitness level,
   Widget _buildInfoItem(
     BuildContext context, 
     String label, 
@@ -712,10 +780,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: Row(
         children: [
+          // Circular icon background
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
+              color: iconColor.withValues(alpha: 0.1), // 10% opacity background
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -725,6 +794,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(width: 16),
+          // Label and value
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,7 +803,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   label,
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7), // 70% opacity
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -753,12 +823,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Statistics item with a value and label
+  /// Used in the stats summary row to display workout statistics
   Widget _buildStatItem(BuildContext context, String value, String label) {
     final colorScheme = Theme.of(context).colorScheme;
     
     return Expanded(
       child: Column(
         children: [
+          // Statistic value
           Text(
             value,
             style: TextStyle(
@@ -768,11 +841,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 4),
+          // Statistic label
           Text(
             label,
             style: TextStyle(
               fontSize: 13,
-              color: colorScheme.onSurface.withValues(alpha: 0.7),
+              color: colorScheme.onSurface.withValues(alpha: 0.7), // 70% opacity
             ),
             textAlign: TextAlign.center,
           ),
@@ -781,15 +855,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
   
+  /// Vertical divider for separating statistics items
   Widget _buildVerticalDivider() {
     return Container(
       height: 40,
       width: 1,
       margin: const EdgeInsets.symmetric(horizontal: 12),
-      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3), // 30% opacity
     );
   }
-  
+
+  /// Shows a dialog for selecting the unit system (metric or imperial).
+  /// Allows the user to choose between metric (kg, cm) and imperial (lb, ft)
   void _showUnitSystemPicker(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

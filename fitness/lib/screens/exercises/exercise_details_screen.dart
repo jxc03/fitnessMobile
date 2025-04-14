@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// This screen displays the details of a specific exercise.
-/// It presents information such as the exercise name, equipment needed, images etc
-
+/// A screen that displays detailed information about a specific exercise.
 class ExerciseDetailScreen extends StatelessWidget {
+  /// The exercise data containing all details to be displayed.
+  /// This map contains various properties including name, equipment, instructions,
+  /// images, videos, muscle groups and tags.
   final Map<dynamic, dynamic> exercise;
 
   const ExerciseDetailScreen({
@@ -11,24 +12,30 @@ class ExerciseDetailScreen extends StatelessWidget {
     required this.exercise,
   });
 
-  // Define the color palette for the entire screen
-  // These colors are to present healthy and wellness
-  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
-  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
-  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
-  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
-  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
-  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
-  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+  // Define the colour palette for the entire screen
+  // These colours were chosen to represent health and wellness themes
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue 
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue 
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray
 
-  /// Build the main widget for the exercise detail screen
+  /// Builds the main widget structure for the exercise detail screen
+  /// This includes:
+  /// App bar with exercise name and action buttons
+  /// Hero image of the exercise
+  /// Information cards (equipment, muscle groups, tags)
+  /// Tab bar for different content sections
+  /// Tab views for instructions, tips, mistakes, and precautions
   @override
   Widget build(BuildContext context) {
-    // Get the instructions from the exercise data
+    // Extract instructions data from the exercise for use in tabs
     final instructions = exercise['instructions'];
     
     return Scaffold(
-      // App bar
+      // App bar with exercise name and action buttons
       appBar: AppBar(
         title: Text(
           exercise['name'] ?? 'Exercise Details',
@@ -41,39 +48,44 @@ class ExerciseDetailScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Favourite button (functionality to be implemented)
           IconButton(
             icon: const Icon(Icons.favorite_border),
             onPressed: () {
-              // Favorite functionality
+              // Favourite functionality to be implemented
             },
           ),
+          // Share button (functionality to be implemented)
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () {
-              // Share functionality
+              // Share functionality to be implemented
             },
           ),
         ],
       ),
       backgroundColor: neutralLight,
+      // Use DefaultTabController for the tabbed interface
       body: DefaultTabController(
-        length: 4,
+        length: 4, // Four tabs: How to, Tips, Mistakes, Precautions
         child: NestedScrollView(
+          // Header section that stays at the top
           headerSliverBuilder: (context, innerBoxIsScrolled) {
             return [
+              // Non-scrollable top section with image and info cards
               SliverToBoxAdapter(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Exercise image
+                    // Exercise image or placeholder
                     _buildImageSection(exercise['images']),
                     
-                    // Information section
+                    // Information section with equipment, muscle groups, and tags
                     _buildInfoSection(context),
                   ],
                 ),
               ),
-              // Tab bar for instructions, tips, mistakes, and precautions
+              // Sticky tab bar that remains visible when scrolling
               SliverPersistentHeader(
                 delegate: _SliverAppBarDelegate(
                   TabBar(
@@ -94,13 +106,14 @@ class ExerciseDetailScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                pinned: true,
+                pinned: true, // Keep the tab bar visible when scrolling
               ),
             ];
           },
+          // Tab content area that scrolls beneath the header
           body: TabBarView(
             children: [
-              // Tab content
+              // Tab content for each section with consistent padding
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: _buildListSection(instructions != null ? instructions['steps'] : null),
@@ -124,14 +137,15 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  /// Build the information section with equipment, muscle groups, and tags
+  /// Information section containing equipment, muscle groups, and tags
+  /// This section displays multiple information cards
   Widget _buildInfoSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Equipment Card
+          // Equipment information card
           _buildInfoCard(
             context,
             title: 'Equipment',
@@ -151,7 +165,7 @@ class ExerciseDetailScreen extends StatelessWidget {
           
           const SizedBox(height: 16),
           
-          // Muscle Groups Card
+          // Muscle Groups card - only shown if data exists
           if (exercise['muscleGroups'] != null)
             _buildInfoCard(
               context,
@@ -166,7 +180,7 @@ class ExerciseDetailScreen extends StatelessWidget {
           
           const SizedBox(height: 16),
           
-          // Tags Card
+          // Tags card - only shown if data exists
           if (exercise['tags'] != null)
             _buildInfoCard(
               context,
@@ -181,11 +195,11 @@ class ExerciseDetailScreen extends StatelessWidget {
           
           const SizedBox(height: 16),
           
-          // Videos Section
+          // Videos section - only shown if data exists
           if (exercise['videos'] != null) 
             _buildVideosCard(context),
             
-          // Photos Gallery
+          // Photos Gallery - only shown if data exists
           if (exercise['photos'] != null) 
             Padding(
               padding: const EdgeInsets.only(top: 16.0),
@@ -205,7 +219,9 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  /// Build reusable info card with consistent styling
+  /// Reusable information card with consistent styling.
+  /// This card template is used for displaying various types of information
+  /// with a title, icon, and custom content widget.
   Widget _buildInfoCard(
     BuildContext context, {
     required String title,
@@ -220,7 +236,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withValues(alpha: 0.1), // 10% opacity shadow
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 1),
@@ -232,6 +248,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Card header with icon and title
             Row(
               children: [
                 Icon(icon, color: iconColor, size: 22),
@@ -246,6 +263,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                 ),
               ],
             ),
+            // Card content (custom widget passed as parameter)
             child,
           ],
         ),
@@ -253,7 +271,9 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  /// Build videos section
+  /// Card to display video content or a placeholder
+  /// Currently shows a placeholder with "coming soon" message and
+  /// notification button, as video functionality is not yet implemented
   Widget _buildVideosCard(BuildContext context) {
     return _buildInfoCard(
       context,
@@ -272,16 +292,16 @@ class ExerciseDetailScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Play button with animation effect
+              // Play button with subtle animation effect via shadow
               Container(
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.8),
+                  color: primaryColor.withValues(alpha: 0.8), // 80% opacity
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withValues(alpha: 0.3),
+                      color: primaryColor.withValues(alpha: 0.3), // 30% opacity shadow
                       spreadRadius: 2,
                       blurRadius: 8,
                       offset: const Offset(0, 2),
@@ -304,9 +324,11 @@ class ExerciseDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              // Styled notify button
+              // Notification button with rounded corners and accent colour
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Notification functionality to be implemented
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: accentGreen,
                   foregroundColor: Colors.white,
@@ -325,11 +347,15 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  /// Build an image section to display the exercise image
+  /// Image section at the top of the screen
+  /// Displays either:
+  /// The exercise image with a gradient overlay and text
+  /// A placeholder if no image is available
+  /// The image can be either from a network URL or a local asset.
   Widget _buildImageSection(dynamic imageUrl) {
-    // Check if imageUrl is not null and is a string 
+    // Check if a valid image URL is provided
     if (imageUrl != null && imageUrl.toString().isNotEmpty) {
-      // Check if the image is a local asset or a network image
+      // Determine if the image is a local asset or a network URL
       final bool isLocalAsset = !imageUrl.toString().startsWith('http') &&
                                 !imageUrl.toString().startsWith('https'); 
       return SizedBox(
@@ -344,8 +370,8 @@ class ExerciseDetailScreen extends StatelessWidget {
                 return LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, neutralDark.withValues(alpha: 0.7)],
-                  stops: const [0.7, 1.0],
+                  colors: [Colors.transparent, neutralDark.withValues(alpha: 0.7)], // Gradient from transparent to dark
+                  stops: const [0.7, 1.0], // Start darkening at 70% of the height
                 ).createShader(rect);
               },
               blendMode: BlendMode.darken,
@@ -371,7 +397,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                   ),
             ),
             
-            // Exercise name overlay at bottom of image (not sure to keep it)
+            // Exercise name overlay at the bottom of the image
             Positioned(
               left: 16,
               right: 16,
@@ -386,7 +412,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                     Shadow(
                       offset: Offset(0, 1),
                       blurRadius: 3.0,
-                      color: Color.fromARGB(150, 0, 0, 0),
+                      color: Color.fromARGB(150, 0, 0, 0), // Subtle text shadow 
                     ),
                   ],
                 ),
@@ -396,11 +422,13 @@ class ExerciseDetailScreen extends StatelessWidget {
         ),
       );
     } else {
+      // If no image is available, show a placeholder
       return _buildImagePlaceholder();
     }
   }
   
-  /// Build a placeholder for when no image is available
+  /// Builds a placeholder widget for when no exercise image is available
+  /// Displays a fitness icon and "No image available" text message
   Widget _buildImagePlaceholder() {
     return Container(
       height: 250,
@@ -409,7 +437,7 @@ class ExerciseDetailScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.fitness_center, size: 60, color: neutralDark.withValues(alpha: 0.7)),
+          Icon(Icons.fitness_center, size: 60, color: neutralDark.withValues(alpha: 0.7)), // 70% opacity
           const SizedBox(height: 16),
           const Text(
             'No image available',
@@ -424,14 +452,17 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  /// Build the muscle groups section
+  /// Muscle groups display with dynamic formatting
+  /// Handles different data structures (String, List, Map) and
+  /// renders the muscle groups as styled chips.
   Widget _buildMuscleGroups(dynamic muscleGroups) {
     if (muscleGroups == null) {
       return const Text('No muscle groups specified');
     }
     
+    // Handle String data type (single muscle group)
     if (muscleGroups is String) {
-      // For a single string muscle group, display it as a chip
+      // Display a single muscle group as a chip
       return Wrap(
         spacing: 10.0,
         runSpacing: 10.0,
@@ -443,7 +474,9 @@ class ExerciseDetailScreen extends StatelessWidget {
           ),
         ],
       );
-    } else if (muscleGroups is List) {
+    } 
+    // Handle List data type (multiple muscle groups as a list)
+    else if (muscleGroups is List) {
       return Wrap(
         spacing: 10.0,
         runSpacing: 10.0,
@@ -456,7 +489,9 @@ class ExerciseDetailScreen extends StatelessWidget {
           ),
         ),
       );
-    } else if (muscleGroups is Map) {
+    } 
+    // Handle Map data type (key value pairs of muscle groups)
+    else if (muscleGroups is Map) {
       return Wrap(
         spacing: 10.0,
         runSpacing: 10.0,
@@ -468,8 +503,9 @@ class ExerciseDetailScreen extends StatelessWidget {
           );
         }).toList(),
       );
-    } else {
-      // For any other data type, convert to string and display as a chip
+    } 
+    // Fallback for any other data type
+    else {
       return Wrap(
         spacing: 10.0,
         runSpacing: 10.0,
@@ -485,18 +521,23 @@ class ExerciseDetailScreen extends StatelessWidget {
   }
   
   
-  /// Build section for tags
+  /// Builds the tags display with appropriate formatting
+  /// Handles different data structures (String, List, Map) and
+  /// renders the tags as styled chips.
   Widget _buildTags(dynamic tags) {
     if (tags == null) {
       return const Text('No tags specified');
     }
     
+    // Handle String data type (single tag)
     if (tags is String) {
       return Text(
         tags,
         style: const TextStyle(fontSize: 16),
       );
-    } else if (tags is List) {
+    } 
+    // Handle List data type (multiple tags as a list)
+    else if (tags is List) {
       return Wrap(
         spacing: 10.0,
         runSpacing: 10.0,
@@ -509,7 +550,9 @@ class ExerciseDetailScreen extends StatelessWidget {
           ),
         ),
       );
-    } else if (tags is Map) {
+    } 
+    // Handle Map data type (key value pairs of tags)
+    else if (tags is Map) {
       return Wrap(
         spacing: 10.0,
         runSpacing: 10.0,
@@ -521,7 +564,9 @@ class ExerciseDetailScreen extends StatelessWidget {
           );
         }).toList(),
       );
-    } else {
+    } 
+    // Fallback for any other data type
+    else {
       return Text(
         tags.toString(),
         style: const TextStyle(fontSize: 16),
@@ -529,23 +574,26 @@ class ExerciseDetailScreen extends StatelessWidget {
     }
   }
   
-  /// Build styled chip with icon and custom colors
+  /// Builds a styled chip widget with consistent appearance.
+  /// Used for displaying muscle groups, tags, and other categorization elements
+  /// with a visually appealing and consistent style.
   Widget _buildStyledChip(String label, Color color, IconData icon) {
-    final Color backgroundColor = color.withValues(alpha: 0.12);
-    final Color textAndIconColor = color.withValues(alpha: 0.9);
+    // Calculate derived colours for background and text/icon
+    final Color backgroundColor = color.withValues(alpha: 0.12); // 12% opacity background
+    final Color textAndIconColor = color.withValues(alpha: 0.9); // 90% opacity text/icon
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(50), // Fully rounded corners
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withOpacity(0.3), // 30% opacity border
           width: 1,
         ),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // Wrap content tightly
         children: [
           Icon(
             icon,
@@ -566,9 +614,13 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  /// Build photo gallery
+  /// Builds a horizontal scrollable photo gallery
+  /// If photos are available, displays them as scrollable thumbnails
+  /// Otherwise, shows a placeholder message
   Widget _buildPhotoGallery(dynamic photos) {
+    // Check if photos data is missing or empty
     if (photos == null || (photos is List && photos.isEmpty) || (photos is String && photos.isEmpty)) {
+      // Display a placeholder for missing photos
       return Container(
         height: 150,
         width: double.infinity,
@@ -579,7 +631,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.photo_library, size: 40, color: neutralDark.withValues(alpha: 0.4)),
+            Icon(Icons.photo_library, size: 40, color: neutralDark.withValues(alpha: 0.4)), // 40% opacity
             const SizedBox(height: 12),
             const Text(
               'Photo gallery will be available soon',
@@ -590,14 +642,15 @@ class ExerciseDetailScreen extends StatelessWidget {
       );
     }
 
-    // Convert to a list if its a single string
+    // Convert the photos data to a list format for consistent handling
     List<String> photoList = [];
     if (photos is String) {
-      photoList = [photos];
+      photoList = [photos]; // Single photo as a string
     } else if (photos is List) {
-      photoList = List<String>.from(photos);
+      photoList = List<String>.from(photos); // Multiple photos as a list
     }
 
+    // Build horizontal scrollable list of photo thumbnails
     return SizedBox(
       height: 140,
       child: ListView.builder(
@@ -611,6 +664,7 @@ class ExerciseDetailScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 12.0),
             child: GestureDetector(
               onTap: () {
+                // Open full screen image viewer when thumbnail is tapped
                 _showFullScreenImage(context, photo, index, photoList);
               },
               child: Container(
@@ -620,7 +674,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.2),
+                      color: Colors.grey.withValues(alpha: 0.2), // 20% opacity shadow
                       spreadRadius: 1,
                       blurRadius: 3,
                       offset: const Offset(0, 1),
@@ -634,6 +688,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                         photo,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
+                          // Show broken image icon if asset image fails to load
                           return Container(
                             color: neutralLight,
                             child: Icon(Icons.broken_image, color: neutralDark.withValues(alpha: 0.5)),
@@ -644,6 +699,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                         photo,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
+                          // Show broken image icon if network image fails to load
                           return Container(
                             color: neutralLight,
                             child: Icon(Icons.broken_image, color: neutralDark.withValues(alpha: 0.5)),
@@ -659,7 +715,11 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
 
-  // Method to show full screen image (not working, need to keep debugging it)
+  /// Opens a full-screen image viewer for the selected photo
+  /// Displays the selected image with zooming capabilities and a
+  /// thumbnail strip at the bottom for navigating between images
+  /// Note: This method is marked as "not working" in the original code
+  /// and needs further debugging.
   void _showFullScreenImage(BuildContext context, String imageUrl, int initialIndex, List<String> allImages) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -670,13 +730,13 @@ class ExerciseDetailScreen extends StatelessWidget {
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.white),
             title: Text(
-              '${initialIndex + 1}/${allImages.length}',
+              '${initialIndex + 1}/${allImages.length}', // Show position in gallery
               style: const TextStyle(color: Colors.white),
             ),
           ),
           body: Stack(
             children: [
-              // Image PageView
+              // Main image viewer with paging and zoom capabilities
               PageView.builder(
                 controller: PageController(initialPage: initialIndex),
                 itemCount: allImages.length,
@@ -686,10 +746,10 @@ class ExerciseDetailScreen extends StatelessWidget {
                 
                   return Center(
                     child: InteractiveViewer(
-                      panEnabled: true,
+                      panEnabled: true, // Allow panning when zoomed
                       boundaryMargin: const EdgeInsets.all(20),
-                      minScale: 0.5,
-                      maxScale: 3,
+                      minScale: 0.5, // Allow zooming out to 50%
+                      maxScale: 3, // Allow zooming in to 300%
                       child: isLocalAsset
                         ? Image.asset(
                             currentImage,
@@ -704,6 +764,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                             currentImage,
                             fit: BoxFit.contain,
                             loadingBuilder: (context, child, loadingProgress) {
+                              // Show loading progress indicator for network images
                               if (loadingProgress == null) return child;
                               return Center(
                                 child: CircularProgressIndicator(
@@ -715,6 +776,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                               );
                             },
                             errorBuilder: (context, error, stackTrace) {
+                              // Show error message if image fails to load
                               return const Center(
                                 child: Text('Error loading image', style: TextStyle(color: Colors.white)),
                               );
@@ -725,7 +787,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                 },
               ),
               
-              // Bottom thumbnail strip
+              // Bottom thumbnail strip for quick navigation between images
               Positioned(
                 bottom: 20,
                 left: 0,
@@ -743,7 +805,8 @@ class ExerciseDetailScreen extends StatelessWidget {
                       
                       return GestureDetector(
                         onTap: () {
-                          // Update the page view to show the selected image
+                          // Navigate to the selected image
+                          // Note: This code likely needs fixing as noted in the original comment
                           PageController(initialPage: index).animateToPage(
                             index,
                             duration: const Duration(milliseconds: 300),
@@ -757,7 +820,7 @@ class ExerciseDetailScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             border: isSelected 
-                              ? Border.all(color: Colors.white, width: 2)
+                              ? Border.all(color: Colors.white, width: 2) // Highlight selected thumbnail
                               : null,
                           ),
                           child: ClipRRect(
@@ -797,15 +860,17 @@ class ExerciseDetailScreen extends StatelessWidget {
     );
   }
   
-  /// Build section for displaying the list of instructions with improved styling
+  /// Builds a section for displaying instructions, tips, mistakes, or precautions
+  /// Handles different data structures and displays items in a styled list format
+  /// with numbered indicators
   Widget _buildListSection(dynamic items) {
-    // Check if items is empty
+    // Display a placeholder if no data is available
     if (items == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.info_outline, size: 48, color: neutralDark.withValues(alpha: 0.5)),
+            Icon(Icons.info_outline, size: 48, color: neutralDark.withValues(alpha: 0.5)), // 50% opacity
             const SizedBox(height: 16),
             Text(
               'No information available',
@@ -823,7 +888,7 @@ class ExerciseDetailScreen extends StatelessWidget {
     // Create an empty list to hold the list items
     List<Widget> listItems = [];
 
-    // Check if items is a Map 
+    // Handle Map data structure (commonly used for instructions)
     if (items is Map) {
       if (items.isEmpty) {
         return Center(
@@ -834,13 +899,14 @@ class ExerciseDetailScreen extends StatelessWidget {
         );
       }
 
-      // Sort the keys numerically
+      // Sort the keys numerically to ensure correct ordering
       final sortedKeys = items.keys.toList()..sort((a, b) {
         final aInt = a is String ? int.tryParse(a) ?? 0 : a;
         final bInt = b is String ? int.tryParse(b) ?? 0 : b;
         return aInt.compareTo(bInt);
       });
 
+      // Create a list item for each entry in the map
       for (var key in sortedKeys) {
         final value = items[key];
         final index = key is String ? int.tryParse(key) ?? 0 : key;
@@ -850,7 +916,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         );
       }
     }
-    // Handle List data structure
+    // Handle List data structure (alternative format for instructions)
     else if (items is List) {
       if (items.isEmpty) {
         return Center(
@@ -861,6 +927,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         );
       }
       
+      // Create a list item for each entry in the list
       for (int i = 0; i < items.length; i++) {
         final value = items[i];
         listItems.add(
@@ -868,18 +935,21 @@ class ExerciseDetailScreen extends StatelessWidget {
         );
       }
     }
-    // Handle unexpected data types
+    // Handle unexpected data types with an error message
     else {
       return Text('Unexpected data format: ${items.runtimeType}');
     }
     
+    // Return a ListView containing all the generated list items
     return ListView(
       padding: EdgeInsets.zero,
       children: listItems,
     );
   }
   
-  // Helper method to build a single list item 
+  /// Builds a single styled list item for instructions, tips, etc
+  /// Creates a visually appealing card with a numbered indicator and
+  /// the instruction text
   Widget _buildListItem(int index, String text) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -890,7 +960,7 @@ class ExerciseDetailScreen extends StatelessWidget {
         border: Border.all(color: neutralMid, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.05),
+            color: Colors.grey.withValues(alpha: 0.05), // 5% opacity shadow
             spreadRadius: 0,
             blurRadius: 2,
             offset: const Offset(0, 1),
@@ -900,20 +970,20 @@ class ExerciseDetailScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Numbered circle with gradient and shadow
+          // Numbered circle with gradient background and subtle shadow
           Container(
             width: 32,
             height: 32,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [secondaryColor, primaryColor],
+                colors: [secondaryColor, primaryColor], // Gradient from secondary to primary
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withValues(alpha: 0.2),
+                  color: primaryColor.withValues(alpha: 0.2), // 20% opacity shadow
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -921,7 +991,7 @@ class ExerciseDetailScreen extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                '${index + 1}',
+                '${index + 1}', // 1-based numbering for user-friendly display
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -931,12 +1001,13 @@ class ExerciseDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
+          // Instruction text with enhanced readability
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
                 fontSize: 16,
-                height: 1.5,
+                height: 1.5, // Line height for better readability
                 color: neutralDark,
               ),
             ),

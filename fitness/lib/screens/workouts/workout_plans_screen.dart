@@ -5,6 +5,13 @@ import 'create_workout_plan_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer';
 
+/// A screen that displays all workout plans created by the current user
+/// This widget fetches workout plans from Firestore and allows users to:
+/// View a list of their workout plans
+/// Create new workout plans
+/// Edit existing workout plans
+/// Delete workout plans
+/// View detailed information about each plan
 class WorkoutPlansScreen extends StatefulWidget {
   const WorkoutPlansScreen({super.key});
 
@@ -13,25 +20,28 @@ class WorkoutPlansScreen extends StatefulWidget {
 }
 
 class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _workoutPlans = [];
-  String? _errorMessage;
+  bool _isLoading = true; // Loading state indicator
+  List<Map<String, dynamic>> _workoutPlans = [];// List of workout plans from Firestore
+  String? _errorMessage; // Error message if fetch operation fails
 
-  // App colour palette 
-  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue - primary accent
-  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue - secondary accent
-  static const Color accentGreen = Color(0xFF4C956C); // Forest green - energy and growth
-  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal - calm and trust
-  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate - professional text
-  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray - backgrounds
-  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray - dividers, borders
+  // App colour palette
+  static const Color primaryColor = Color(0xFF2A6F97); // Deep blue 
+  static const Color secondaryColor = Color(0xFF61A0AF); // Teal blue 
+  static const Color accentGreen = Color(0xFF4C956C); // Forest green 
+  static const Color accentTeal = Color(0xFF2F6D80); // Deep teal 
+  static const Color neutralDark = Color(0xFF3D5A6C); // Dark slate 
+  static const Color neutralLight = Color(0xFFF5F7FA); // Light gray 
+  static const Color neutralMid = Color(0xFFE1E7ED); // Mid gray 
 
   @override
   void initState() {
     super.initState();
-    _fetchWorkoutPlans();
+    _fetchWorkoutPlans(); // Fetch workout plans when the screen initialises
   }
 
+  /// Fetches workout plans from Firestore for the current user
+  /// Queries the 'WorkoutPlans' collection, filtering for plans
+  /// created by the current authenticated user and orders them by creation date
   Future<void> _fetchWorkoutPlans() async {
     setState(() {
       _isLoading = true;
@@ -39,9 +49,10 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     });
 
     try {
-      // Get the current user ID
+      // Get the current user ID for filtering workout plans
       final String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
       
+      // Query Firestore for this user's workout plans, sorted by creation date
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('WorkoutPlans')
           .where('userId', isEqualTo: userId)
@@ -50,6 +61,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
 
       final List<Map<String, dynamic>> loadedPlans = [];
 
+      // Process each document in the query results
       for (var doc in snapshot.docs) {
         final data = doc.data() as Map<String, dynamic>;
         loadedPlans.add({
@@ -63,11 +75,13 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
         });
       }
 
+      // Update the state with the fetched workout plans
       setState(() {
         _workoutPlans = loadedPlans;
         _isLoading = false;
       });
     } catch (error) {
+      // Handle any errors that occur during fetch
       setState(() {
         _errorMessage = 'Failed to load workout plans: $error';
         _isLoading = false;
@@ -92,7 +106,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: _buildBody(),
+      body: _buildBody(), // Main content area with conditional rendering
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreateWorkoutPlan(),
         backgroundColor: primaryColor,
@@ -109,8 +123,15 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     );
   }
 
+  /// Builds the main body content based on the current state
+  /// This method conditionally renders:
+  /// A loading indicator when data is being fetched
+  /// An error message if the fetch operation failed
+  /// An empty state UI if no workout plans exist
+  /// A list of workout plan cards if plans are available
   Widget _buildBody() {
     if (_isLoading) {
+      // Show loading indicator while fetching data
       return Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
@@ -119,6 +140,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     }
 
     if (_errorMessage != null) {
+      // Show error message if fetch operation failed
       return Center(
         child: Text(
           _errorMessage!,
@@ -128,9 +150,11 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     }
 
     if (_workoutPlans.isEmpty) {
+      // Show empty state if no workout plans exist
       return _buildEmptyState();
     }
 
+    // Show list of workout plans
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _workoutPlans.length,
@@ -141,17 +165,21 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     );
   }
 
+  /// Builds the empty state UI when no workout plans exist
+  /// Displays a placeholder with instructions and a button to create the first workout plan
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Fitness icon
           Icon(
             Icons.fitness_center,
             size: 80,
-            color: neutralDark.withValues(alpha: 0.3),
+            color: neutralDark.withValues(alpha: 0.3), // 30% opacity
           ),
           const SizedBox(height: 16),
+          // Empty state title
           Text(
             'No Workout Plans Yet',
             style: TextStyle(
@@ -161,14 +189,16 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
             ),
           ),
           const SizedBox(height: 8),
+          // Empty state description
           Text(
             'Create your first workout plan to get started!',
             style: TextStyle(
-              color: neutralDark.withValues(alpha: 0.7),
+              color: neutralDark.withValues(alpha: 0.7), // 70% opacity
               fontSize: 16,
             ),
           ),
           const SizedBox(height: 24),
+          // Create workout plan button
           ElevatedButton.icon(
             onPressed: () => _navigateToCreateWorkoutPlan(),
             icon: const Icon(Icons.add),
@@ -190,7 +220,13 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     );
   }
 
- Widget _buildWorkoutPlanCard(Map<String, dynamic> plan) {
+  /// Builds a card widget for displaying a workout plan
+  /// Each card shows:
+  /// The plan name and description
+  /// Number of exercises in the plan
+  /// Options to edit or delete the plan
+  /// A button to view plan details
+  Widget _buildWorkoutPlanCard(Map<String, dynamic> plan) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
@@ -199,7 +235,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(color: neutralMid, width: 1),
       ),
-      child: InkWell( // If the user clicks on the card
+      child: InkWell( // Make the entire card tappable
         onTap: () => _navigateToWorkoutPlanDetail(plan['id']),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -211,6 +247,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Plan name with overflow handling
                   Expanded(
                     child: Text(
                       plan['name'],
@@ -220,9 +257,10 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                         color: neutralDark,
                       ),
                       maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.ellipsis, // "..." if text is too long
                     ),
                   ),
+                  // Popup menu for edit/delete options
                   PopupMenuButton<String>(
                     onSelected: (value) {
                       if (value == 'edit') {
@@ -233,7 +271,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                     },
                     icon: Icon(
                       Icons.more_vert,
-                      color: neutralDark.withValues(alpha: 0.7),
+                      color: neutralDark.withValues(alpha: 0.7), // 70% opacity
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -242,6 +280,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                     color: Colors.white,
                     elevation: 1,
                     itemBuilder: (context) => [
+                      // Edit option
                       PopupMenuItem<String>(
                         value: 'edit',
                         child: Row(
@@ -255,6 +294,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                           ],
                         ),
                       ),
+                      // Delete option
                       PopupMenuItem<String>(
                         value: 'delete',
                         child: Row(
@@ -272,20 +312,22 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                   ),
                 ],
               ),
+              // Plan description - only shown if available
               if (plan['description'] != null && plan['description'].isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     plan['description'],
                     style: TextStyle(
-                      color: neutralDark.withValues(alpha: 0.7),
+                      color: neutralDark.withValues(alpha: 0.7), // 70% opacity
                       fontSize: 14,
                     ),
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: TextOverflow.ellipsis, // "..." if text is too long
                   ),
                 ),
               const SizedBox(height: 16),
+              // Bottom section with exercise count and action button
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,12 +335,14 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Exercise count indicator with proper pluralisation
                       _buildInfoBox(
                         icon: Icons.fitness_center, 
                         text: '${plan['exerciseCount']} exercise${plan['exerciseCount'] != 1 ? 's' : ''}',
                         color: secondaryColor,
                       ),
                       const SizedBox(height: 12),
+                      // View details button
                       ElevatedButton(
                         onPressed: () => _navigateToWorkoutPlanDetail(plan['id']),
                         style: ElevatedButton.styleFrom(
@@ -329,6 +373,8 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     );
   }
 
+  /// Builds a styled information box with icon and text
+  /// Used for displaying metadata about the workout plan like the number of exercises
   Widget _buildInfoBox({
     required IconData icon,
     required String text,
@@ -337,10 +383,10 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.12), // 12% opacity background
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: color.withValues(alpha: 0.3),
+          color: color.withValues(alpha: 0.3), // 30% opacity border
           width: 1,
         ),
       ),
@@ -350,13 +396,13 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
           Icon(
             icon,
             size: 16,
-            color: color.withValues(alpha: 0.9),
+            color: color.withValues(alpha: 0.9), // 90% opacity icon
           ),
           const SizedBox(width: 6),
           Text(
             text,
             style: TextStyle(
-              color: color.withValues(alpha: 0.9),
+              color: color.withValues(alpha: 0.9), // 90% opacity text
               fontWeight: FontWeight.w500,
               fontSize: 13,
             ),
@@ -366,62 +412,46 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     );
   }
 
-  Widget _buildViewDetailsButton() {
-    return Container(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: null, // This is handled by the InkWell on the entire card
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: primaryColor,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: const Text(
-          'View Details',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
+  /// Navigates to the workout plan detail screen for a specific plan
+  /// When returning from the detail screen, refreshes the list of workout plans to ensure data consistency
   void _navigateToWorkoutPlanDetail(String planId) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => WorkoutPlanDetailScreen(planId: planId),
       ),
-    ).then((_) => _fetchWorkoutPlans()); // Refresh after returning
+    ).then((_) => _fetchWorkoutPlans()); // Refresh plans after returning
   }
 
+  /// Navigates to the screen for creating a new workout plan
+  /// When returning from the creation screen, refreshes the list of workout plans to include the newly created plan.
   void _navigateToCreateWorkoutPlan() {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CreateWorkoutPlanScreen(),
       ),
-    ).then((_) => _fetchWorkoutPlans()); // Refresh after returning
+    ).then((_) => _fetchWorkoutPlans()); // Refresh plans after returning
   }
 
+  /// Navigates to the screen for editing an existing workout plan.
+  /// Uses the same CreateWorkoutPlanScreen but passes the planId parameter to indicate edit mode. Refreshes the list after returning.
   void _navigateToEditWorkoutPlan(String planId) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CreateWorkoutPlanScreen(planId: planId),
       ),
-    ).then((_) => _fetchWorkoutPlans()); // Refresh after returning
+    ).then((_) => _fetchWorkoutPlans()); // Refresh plans after returning
   }
 
+  /// Shows a confirmation dialog before deleting a workout plan.
+  /// Displays the plan name and warns that the action cannot be undone.
+  /// Provides options to cancel or confirm the deletion.
   Future<void> _confirmDeleteWorkoutPlan(String planId, String planName) async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // User must tap a button to dismiss
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(
@@ -445,12 +475,13 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'This action cannot be undone.',
-                  style: TextStyle(color: neutralDark.withValues(alpha: 0.7)),
+                  style: TextStyle(color: neutralDark.withValues(alpha: 0.7)), // 70% opacity
                 ),
               ],
             ),
           ),
           actions: <Widget>[
+            // Cancel button
             TextButton(
               child: Text(
                 'Cancel',
@@ -460,6 +491,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
                 Navigator.of(context).pop();
               },
             ),
+            // Delete button
             TextButton(
               child: Text(
                 'Delete',
@@ -476,11 +508,16 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
     );
   }
 
+  /// Deletes a workout plan from Firestore
+  /// Attempts to delete the document with the specified planId,
+  /// then refreshes the workout plans list and shows a success or error message as appropriate
   Future<void> _deleteWorkoutPlan(String planId) async {
     try {
+      // Delete the document from Firestore
       await FirebaseFirestore.instance.collection('WorkoutPlans').doc(planId).delete();
       _fetchWorkoutPlans(); // Refresh the list
       
+      // Show success message if the widget is still mounted
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -495,6 +532,7 @@ class _WorkoutPlansScreenState extends State<WorkoutPlansScreen> {
         );
       }
     } catch (error) {
+      // Show error message if deletion fails and the widget is still mounted
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

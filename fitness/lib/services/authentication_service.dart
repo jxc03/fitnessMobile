@@ -1,6 +1,7 @@
 // Importing packages
 import 'package:firebase_auth/firebase_auth.dart'; // Imports Firebase Authentication package
 import 'package:cloud_firestore/cloud_firestore.dart'; // Imports Cloud Firestore package
+import 'dart:developer'; // Imports the log function
 
 class AuthService {
   // Declaring instances
@@ -77,11 +78,9 @@ class AuthService {
           'fitnessLevel': 'beginner',
         }
       });
-      print('User document created successfully for ${user.uid}');
+      log('User document created successfully for ${user.uid}');
     } catch (e) {
-      print('Error creating user document: $e');
-      // We don't want to rethrow here, as we want the auth to succeed even if Firestore fails
-      //// Just log the error for now
+      log('Error creating user document: $e');
     }
   }
 

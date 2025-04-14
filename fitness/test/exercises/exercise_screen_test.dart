@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-// Update these imports to match your actual app structure
 import 'package:fitness/screens/exercises/exercises_screen.dart';
 import 'package:fitness/screens/exercises/exercise_details_screen.dart';
 import 'package:fitness/screens/exercises/filter_dialog.dart';

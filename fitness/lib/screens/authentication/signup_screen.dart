@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fitness/services/authentication_service.dart';
+import 'dart:developer'; 
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -51,8 +52,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       final displayName = _nameController.text.trim();
-    
-      print('Attempting to register: $email with name: $displayName');
+
+      log('Attempting to register: $email with name: $displayName');
 
       // Attempt to register the user with email and password
       await _authService.registerWithEmailAndPassword( // Call sign-up method from authentication service
